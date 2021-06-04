@@ -11,14 +11,15 @@ import prm.project2.R
  * A [FragmentPagerAdapter] that returns a fragment corresponding to
  * one of the sections/tabs/pages.
  */
-class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
+class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) :
+    FragmentStatePagerAdapter(fragmentManager) {
 
     private val transactionsListFragment by lazy { AllRssEntriesFragment() }
     private val monthBalanceGraph by lazy { FavouriteRssEntriesFragment() }
     private val pages by lazy {
         arrayOf(
-            Pair(R.string.tab_text_1, transactionsListFragment),
-            Pair(R.string.tab_text_2, monthBalanceGraph)
+            Pair(R.string.tab_title_all, transactionsListFragment),
+            Pair(R.string.tab_title_favourites, monthBalanceGraph)
         )
     }
 

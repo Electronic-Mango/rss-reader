@@ -13,19 +13,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PrmProject2">
         <activity
-            android:name=".FullEntry"
-            android:label="@string/title_activity_full_entry"
-            android:theme="@style/Theme.PrmProject2.NoActionBar"></activity>
-        <activity
-            android:name=".MainActivity"
+            android:name=".ui.main.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.PrmProject2.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.rssentrydetails.RssEntryDetailsActivity"
+            android:label="@string/title_activity_rss_entry_details"
+            android:theme="@style/Theme.PrmProject2.NoActionBar" />
     </application>
 
 </manifest>

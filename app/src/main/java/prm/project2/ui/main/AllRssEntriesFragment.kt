@@ -28,7 +28,7 @@ class AllRssEntriesFragment : Fragment() {
         pageViewModel.entries.observe(viewLifecycleOwner, {
             binding.allRssEntriesRecyclerView.apply {
                 layoutManager = LinearLayoutManager(requireContext())
-                adapter = AllRssEntriesRecyclerViewAdapter(it)
+                adapter = AllRssEntriesRecyclerViewAdapter(pageViewModel, it)
             }
         })
     }

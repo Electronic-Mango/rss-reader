@@ -2,24 +2,26 @@ package prm.project2.ui.main
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import prm.project2.rssentries.RssEntry
-import prm.project2.rssentries.RssEntryImg
 
 class AllRssEntriesViewModel : ViewModel() {
+    private val mutableEntries = MutableLiveData<List<RssEntry>>()
+    val entries: LiveData<List<RssEntry>> = mutableEntries
+    private val mutableEntryToDisplay = MutableLiveData<RssEntry>()
+    val entryToDisplay: LiveData<RssEntry> = mutableEntryToDisplay
 
-    private val mutableEntries = MutableLiveData<List<RssEntryImg>>()
-
-    val entries: LiveData<List<RssEntryImg>> = Transformations.map(mutableEntries) {
-        it
+    fun setEntries(entries: List<RssEntry>) {
+        mutableEntries.value = entries
     }
 
-//    fun setEntries(entries: String) {
-//        mutableEntries.value = entries
-//    }
+    fun showEntry(entry: RssEntry) {
+        mutableEntryToDisplay.value = entry
+    }
 
-    fun setEntries(entries: List<RssEntryImg>) {
-        mutableEntries.value = entries
+    fun getEntry(guid: String?): RssEntry? {
+        return entries.value?.stream()?.filter {
+            it.guid == guid
+        }?.findFirst()?.orElseGet { null }
     }
 }
