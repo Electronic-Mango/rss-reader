@@ -8,25 +8,20 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
-import prm.project2.databinding.FragmentMainBinding
+import prm.project2.databinding.FragmentAllRssEntriesBinding
 
 class FavouriteRssEntriesFragment : Fragment() {
 
     private val pageViewModel: FavouriteRssEntriesViewModel by activityViewModels()
     private val binding get() = _binding!!
-    private var _binding: FragmentMainBinding? = null
+    private var _binding: FragmentAllRssEntriesBinding? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentMainBinding.inflate(inflater, container, false)
+        _binding = FragmentAllRssEntriesBinding.inflate(inflater, container, false)
         val root = binding.root
-
-        val textView: TextView = binding.sectionLabel
-        pageViewModel.text.observe(viewLifecycleOwner, Observer {
-            textView.text = it
-        })
         return root
     }
 

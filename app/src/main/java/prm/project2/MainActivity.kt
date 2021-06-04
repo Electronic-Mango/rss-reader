@@ -1,19 +1,23 @@
 package prm.project2
 
+import android.app.ProgressDialog
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import prm.project2.databinding.ActivityMainBinding
-import prm.project2.rssentries.RssEntry
+import prm.project2.rssentries.RssEntryImg
 import prm.project2.rssentries.parseRssStream
 import prm.project2.ui.main.AllRssEntriesViewModel
 import prm.project2.ui.main.FavouriteRssEntriesViewModel
 import prm.project2.ui.main.SectionsPagerAdapter
 import java.net.URL
+import java.util.stream.Collectors
 import javax.net.ssl.HttpsURLConnection
 import kotlin.concurrent.thread
 
@@ -28,11 +32,29 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
         setupViewPager()
         setupFab()
+        setSupportActionBar(binding.toolbarMainActivity)
         loadRss()
-        allRssEntriesViewModel.setEntries("Wszystkie wpisy RSS!")
-        favouriteRssEntriesViewModel.setEntries("Ulubione wpisy RSS!")
+//        allRssEntriesViewModel.setEntries("Wszystkie wpisy RSS!")
+//        favouriteRssEntriesViewModel.setEntries("Ulubione wpisy RSS!")
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.menu_main_activity, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.refresh -> {
+                loadRss()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun setupViewPager() {
@@ -54,11 +76,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadRss() {
+        val dialog = ProgressDialog.show(this, "", "Ładowanie danych...")
         thread {
             val connection = URL(correctRssPath()).openConnection() as HttpsURLConnection
             try {
-                val rssEntries = parseRssStream(connection.inputStream)
-                logEntries(rssEntries)
+                parseRssStream(connection.inputStream).stream()
+                    .peek { Log.d("RSS-ENTRY", it.toString()) }
+                    .filter {it.guid != null && it.title != null}
+                    .map(RssEntryImg::newInstance)
+                    .collect(Collectors.toList()).let {
+                        runOnUiThread {
+                            allRssEntriesViewModel.setEntries(it)
+                            dialog.dismiss()
+                        }
+                    }
             } finally {
                 connection.disconnect()
             }
@@ -66,10 +97,5 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun correctRssPath() = RSS_LINK_POLAND
-
-    private fun logEntries(rssEntries: List<RssEntry>) {
-        rssEntries.forEach { Log.d("RSS-ENTRY", it.toString()) }
-        Log.d("RSS-NUMBER-OF-ENTRIES", rssEntries.size.toString())
-    }
 
 }

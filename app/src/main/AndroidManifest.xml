@@ -13,6 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PrmProject2">
         <activity
+            android:name=".FullEntry"
+            android:label="@string/title_activity_full_entry"
+            android:theme="@style/Theme.PrmProject2.NoActionBar"></activity>
+        <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.PrmProject2.NoActionBar">
