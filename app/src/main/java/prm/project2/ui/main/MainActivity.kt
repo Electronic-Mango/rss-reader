@@ -1,5 +1,6 @@
 package prm.project2.ui.main
 
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,11 +9,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager.widget.ViewPager
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
@@ -25,12 +26,14 @@ import prm.project2.R
 import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.parseRssStream
+import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
+import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesViewModel
 import prm.project2.ui.rssentrydetails.RssEntryDetailsActivity
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.stream.Collectors.toList
-import javax.net.ssl.HttpsURLConnection
 import kotlin.concurrent.thread
 
 private const val RSS_LINK_POLAND = "https://www.polsatnews.pl/rss/polska.xml"
@@ -38,15 +41,12 @@ private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.
 
 class MainActivity : AppCompatActivity() {
 
-    private val allRssEntriesViewModel: AllRssEntriesViewModel by viewModels()
-    private val favouriteRssEntriesViewModel: FavouriteRssEntriesViewModel by viewModels()
-    private lateinit var binding: ActivityMainBinding
+    private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()
+    private val rssEntriesFavouritesViewModel: RssEntriesFavouritesViewModel by viewModels()
     private val showRssEntryDetails = registerForActivityResult(StartActivityForResult()) {
-        val displayedEntry = it.data?.let { allRssEntriesViewModel.getEntry(it.getStringExtra(INTENT_DATA_GUID)) }
-        displayedEntry?.apply {
-            favourite = it.data?.getBooleanExtra(INTENT_DATA_FAVOURITE, favourite) ?: favourite
-        }
+        handleRssEntryDetailsResponse(it)
     }
+    private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +56,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupViewPager()
         loadRss()
-        allRssEntriesViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
+        rssEntriesAllViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
+        rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
+        rssEntriesAllViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
+        rssEntriesFavouritesViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -86,37 +89,32 @@ class MainActivity : AppCompatActivity() {
     private fun loadRss() {
         val dialog = ProgressDialog.show(this, "", "Ładowanie danych...")
         thread {
-            val connection = URL(correctRssPath()).openConnection() as HttpsURLConnection
+            val connection = URL(RSS_LINK_POLAND).openConnection() as HttpURLConnection
             parseRssStream(connection.inputStream).stream()
-                .peek { Log.d("RSS-ENTRY", it.toString()) }
                 .filter { it.guid != null && it.title != null }
                 .peek { it.image = loadBitmap(it.imageUrl) }
                 .collect(toList()).let {
                     runOnUiThread {
-                        allRssEntriesViewModel.setEntries(it)
+                        rssEntriesAllViewModel.setEntries(it)
                         dialog.dismiss()
                     }
                 }
         }
     }
 
-    private fun loadBitmap(url: String?): Bitmap? {
-        if (url == null) return null
-        var bitmap: Bitmap? = null
+    private fun loadBitmap(url: String?): Bitmap? = url?.let {
         try {
-            bitmap = URL(url).openStream().let { BitmapFactory.decodeStream(it) }
+            URL(url).openStream().let { BitmapFactory.decodeStream(it) }
         } catch (exception: MalformedURLException) {
-            Log.d("LOADING-IMG", "Malformed URL $url!")
+            Log.w("LOADING-IMG", "Malformed URL $url!")
+            null
         } catch (exception: IOException) {
-            Log.d("LOADING-IMG", "I/O Exception when loading IMG!")
+            Log.w("LOADING-IMG", "I/O Exception when loading an image from $url!")
+            null
         }
-        return bitmap
     }
 
-    private fun correctRssPath() = RSS_LINK_POLAND
-
     private fun runFullRssEntryDetailsActivity(rssEntry: RssEntry) {
-        Log.d("DISPLAY-ENTRY", "Showing full info about $rssEntry")
         val intent = Intent(this, RssEntryDetailsActivity::class.java).apply {
             putExtra(INTENT_DATA_GUID, rssEntry.guid)
             putExtra(INTENT_DATA_TITLE, rssEntry.title)
@@ -127,6 +125,31 @@ class MainActivity : AppCompatActivity() {
         }
         IMAGE_TO_SHOW = rssEntry.image
         showRssEntryDetails.launch(intent)
+    }
+
+    private fun toggleFavouriteOnRssEntry(rssEntry: RssEntry) {
+        val newFavouriteValue = !rssEntry.favourite
+        val popupMessage = if (newFavouriteValue) "Dodać wpis do ulubionych?" else "Usunąć wpis z ulubionych?"
+        AlertDialog.Builder(this)
+            .setMessage(popupMessage)
+            .setCancelable(false)
+            .setPositiveButton("Tak") { _, _ -> updateEntries(rssEntry.guid, newFavouriteValue, false) }
+            .setNegativeButton("Nie") { dialog, _ -> dialog.dismiss() }
+            .create()
+            .show()
+    }
+
+    private fun handleRssEntryDetailsResponse(activityResult: ActivityResult) {
+        activityResult.data?.apply {
+            val guid = getStringExtra(INTENT_DATA_GUID)
+            val favourite = getBooleanExtra(INTENT_DATA_FAVOURITE, false)
+            updateEntries(guid, favourite)
+        }
+    }
+
+    private fun updateEntries(guid: String?, favourite: Boolean, markAsRead: Boolean = true) {
+        val modifiedEntry = rssEntriesAllViewModel.updateEntry(guid, favourite, markAsRead)
+        rssEntriesFavouritesViewModel.updateEntry(guid, favourite, modifiedEntry, markAsRead)
     }
 
 }

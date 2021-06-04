@@ -70,16 +70,7 @@ class RssEntryDetailsActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.share -> { shareRssEntry() }
             R.id.favourite -> { switchFavourite(item) }
-            android.R.id.home -> {
-                Intent().apply {
-                    putExtra(INTENT_DATA_GUID, rssEntry.guid)
-                    putExtra(INTENT_DATA_FAVOURITE, rssEntry.favourite)
-                }.let {
-                    setResult(Activity.RESULT_OK, it)
-                }
-                finish()
-                true
-            }
+            android.R.id.home -> { finishActivity() }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -108,5 +99,15 @@ class RssEntryDetailsActivity : AppCompatActivity() {
     private fun setFavouriteIcon(item: MenuItem) {
         val newIcon = if (rssEntry.favourite) R.drawable.ic_favorite_full else R.drawable.ic_favorite_border
         item.icon = ResourcesCompat.getDrawable(resources, newIcon, null)
+    }
+
+    private fun finishActivity(): Boolean {
+        Intent().apply {
+            putExtra(INTENT_DATA_GUID, rssEntry.guid)
+            putExtra(INTENT_DATA_FAVOURITE, rssEntry.favourite)
+            setResult(Activity.RESULT_OK, this)
+        }
+        finish()
+        return true
     }
 }

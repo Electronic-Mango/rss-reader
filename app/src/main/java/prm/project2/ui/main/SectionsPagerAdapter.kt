@@ -6,6 +6,8 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import androidx.fragment.app.FragmentStatePagerAdapter
 import prm.project2.R
+import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllFragment
+import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesFragment
 
 /**
  * A [FragmentPagerAdapter] that returns a fragment corresponding to
@@ -14,12 +16,12 @@ import prm.project2.R
 class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) :
     FragmentStatePagerAdapter(fragmentManager) {
 
-    private val transactionsListFragment by lazy { AllRssEntriesFragment() }
-    private val monthBalanceGraph by lazy { FavouriteRssEntriesFragment() }
+    private val allRssEntries by lazy { RssEntriesAllFragment() }
+    private val favouriteRssEntries by lazy { RssEntriesFavouritesFragment() }
     private val pages by lazy {
         arrayOf(
-            Pair(R.string.tab_title_all, transactionsListFragment),
-            Pair(R.string.tab_title_favourites, monthBalanceGraph)
+            Pair(R.string.tab_title_all, allRssEntries),
+            Pair(R.string.tab_title_favourites, favouriteRssEntries)
         )
     }
 
