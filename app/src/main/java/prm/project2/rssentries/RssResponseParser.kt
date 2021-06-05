@@ -44,10 +44,10 @@ private fun readEntry(parser: XmlPullParser): RssEntry {
     parser.require(XmlPullParser.START_TAG, NAMESPACE, "item")
     var guid = ""
     var title = ""
-    var link = ""
-    var description = ""
-    var date: LocalDateTime = LocalDateTime.now()
-    var enclosure = ""
+    var link: String? = null
+    var description: String? = null
+    var date: LocalDateTime? = null
+    var enclosure: String? = null
     while (parser.next() != XmlPullParser.END_TAG) {
         if (parser.eventType != XmlPullParser.START_TAG) {
             continue

@@ -6,8 +6,8 @@ import prm.project2.ui.main.rssentries.RssEntriesViewModel
 
 class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
 
-    fun updateEntry(guid: String?, favourite: Boolean, rssEntry: RssEntry?, markAsRead: Boolean = true) {
-        val entry = getEntry(guid) ?: rssEntry ?: return
+    fun updateEntry(guid: String?, favourite: Boolean, rssEntry: RssEntry?, markAsRead: Boolean = true): RssEntry? {
+        val entry = getEntry(guid) ?: rssEntry ?: return null
         entry.read = entry.read || markAsRead
         Log.d("UPDATE-FAVOURITE-ENTRIES", "${entry.read}, $favourite, $entry")
         val entryExists = entryExists(entry)
@@ -18,6 +18,7 @@ class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
         } else {
             refreshEntries()
         }
+        return entry
     }
 
     private fun addEntry(rssEntry: RssEntry) {

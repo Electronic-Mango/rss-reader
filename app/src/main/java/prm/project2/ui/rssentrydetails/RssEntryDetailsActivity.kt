@@ -8,6 +8,8 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+import com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
 import prm.project2.Common.INTENT_DATA_DESCRIPTION
@@ -49,8 +51,8 @@ class RssEntryDetailsActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         rssEntry = RssEntry(
-            intent.getStringExtra(INTENT_DATA_GUID),
-            intent.getStringExtra(INTENT_DATA_TITLE),
+            intent.getStringExtra(INTENT_DATA_GUID)!!,
+            intent.getStringExtra(INTENT_DATA_TITLE)!!,
             intent.getStringExtra(INTENT_DATA_LINK),
             intent.getStringExtra(INTENT_DATA_DESCRIPTION),
             intent.getSerializableExtra(INTENT_DATA_DATE) as LocalDateTime?,
@@ -90,9 +92,12 @@ class RssEntryDetailsActivity : AppCompatActivity() {
     private fun switchFavourite(item: MenuItem): Boolean {
         rssEntry.favourite = !rssEntry.favourite
         setFavouriteIcon(item)
-        val snackMessage = if (rssEntry.favourite) "Dodano do ulubionych..." else "Usunięto z ulubionych..."
-        Snackbar.make(binding.rssEntryDetailsContent.root, snackMessage, Snackbar.LENGTH_SHORT)
-            .setAction("Action", null).show()
+        val snackMessage = if (rssEntry.favourite) "Wpis dodany do ulubionych..." else "Wpis usunięty z ulubionych..."
+        Snackbar.make(binding.rssEntryDetailsContent.root, snackMessage, LENGTH_LONG)
+            .setAction("Cofnij") {
+                rssEntry.favourite = !rssEntry.favourite
+                setFavouriteIcon(item)
+            }.show()
         return true
     }
 

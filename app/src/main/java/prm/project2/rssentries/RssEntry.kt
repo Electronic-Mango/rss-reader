@@ -4,8 +4,8 @@ import android.graphics.Bitmap
 import java.time.LocalDateTime
 
 data class RssEntry(
-    val guid: String?,
-    val title: String?,
+    val guid: String,
+    val title: String,
     val link: String?,
     val description: String?,
     val date: LocalDateTime?,

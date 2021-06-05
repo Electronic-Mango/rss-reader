@@ -13,8 +13,10 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.room.Room
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
+import prm.project2.Common.DB_NAME
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
 import prm.project2.Common.INTENT_DATA_DESCRIPTION
@@ -23,6 +25,8 @@ import prm.project2.Common.INTENT_DATA_GUID
 import prm.project2.Common.INTENT_DATA_LINK
 import prm.project2.Common.INTENT_DATA_TITLE
 import prm.project2.R
+import prm.project2.database.ReadRssGuid
+import prm.project2.database.ReadRssGuidDatabase
 import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.parseRssStream
@@ -47,9 +51,11 @@ class MainActivity : AppCompatActivity() {
         handleRssEntryDetailsResponse(it)
     }
     private lateinit var binding: ActivityMainBinding
+    private lateinit var database: ReadRssGuidDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        database = Room.databaseBuilder(this, ReadRssGuidDatabase::class.java, DB_NAME).build()
         setContentView(R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
 
@@ -91,23 +97,27 @@ class MainActivity : AppCompatActivity() {
     private fun loadRss() {
         val dialog = ProgressDialog.show(this, "", "Ładowanie danych...")
         thread {
+            val existingReadEntries = loadReadRssEntriesAndClearDb()
             val connection = URL(RSS_LINK_POLAND).openConnection() as HttpURLConnection
             parseRssStream(connection.inputStream).stream()
-                .filter { it.guid != null && it.title != null }
-                .peek { it.image = loadBitmap(it.imageUrl) }
-                .peek { newEntry ->
-                    rssEntriesAllViewModel.getEntry(newEntry.guid)?.let {
-                        newEntry.read = it.read
-                        newEntry.favourite = it.favourite
-                    }
-                }
-                .collect(toList()).let {
+                .filter { newEntry -> newEntry.guid.isNotBlank() && newEntry.title.isNotBlank() }
+                .peek { newEntry -> newEntry.image = loadBitmap(newEntry.imageUrl) }
+                .peek(this::markAsReadAndFavouriteIfRequired)
+                .peek { newEntry -> newEntry.read = existingReadEntries.contains(newEntry.guid.toEntity()) }
+                .peek { newEntry -> if (newEntry.read) database.readRssGuidDao().insert(newEntry.guid.toEntity()) }
+                .collect(toList()).let { loadedEntries ->
                     runOnUiThread {
-                        rssEntriesAllViewModel.setEntries(it)
+                        rssEntriesAllViewModel.setEntries(loadedEntries)
                         dialog.dismiss()
                     }
                 }
         }
+    }
+
+    private fun loadReadRssEntriesAndClearDb(): List<ReadRssGuid> {
+        val readEntries = database.readRssGuidDao().getAll()
+        database.readRssGuidDao().deleteAll()
+        return readEntries
     }
 
     private fun loadBitmap(url: String?): Bitmap? = url?.let {
@@ -121,6 +131,15 @@ class MainActivity : AppCompatActivity() {
             null
         }
     }
+
+    private fun markAsReadAndFavouriteIfRequired(rssEntry: RssEntry) {
+        rssEntriesAllViewModel.getEntry(rssEntry.guid)?.let {
+            rssEntry.read = it.read
+            rssEntry.favourite = it.favourite
+        }
+    }
+
+    private fun String.toEntity(): ReadRssGuid = ReadRssGuid(this)
 
     private fun runFullRssEntryDetailsActivity(rssEntry: RssEntry) {
         val intent = Intent(this, RssEntryDetailsActivity::class.java).apply {
@@ -157,6 +176,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateEntries(guid: String?, favourite: Boolean, markAsRead: Boolean = true) {
         val modifiedEntry = rssEntriesAllViewModel.updateEntry(guid, favourite, markAsRead)
-        rssEntriesFavouritesViewModel.updateEntry(guid, favourite, modifiedEntry, markAsRead)
+        val modifiedEntryFav = rssEntriesFavouritesViewModel.updateEntry(guid, favourite, modifiedEntry, markAsRead)
+        thread {
+            if (markAsRead) {
+                modifiedEntry?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
+                modifiedEntryFav?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
+            }
+        }
     }
 }
