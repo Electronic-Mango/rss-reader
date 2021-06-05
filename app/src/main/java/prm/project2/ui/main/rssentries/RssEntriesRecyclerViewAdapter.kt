@@ -40,13 +40,13 @@ class RssEntriesRecyclerViewAdapter(val viewModel: RssEntriesViewModel, lifecycl
     override fun getItemCount(): Int = rssEntries.size
 
     inner class RssEntryViewHolder(binding: FragmentRssEntryBinding) : ViewHolder(binding.root) {
-        private val rssEntryLayout: ConstraintLayout = binding.rssEntry
-        private val title: TextView = binding.rssEntryTitle
-        private val shortDescription: TextView = binding.rssEntryShortDescription
-        private val image: ImageView = binding.rssEntryImage
-        private val favouriteMark: ImageView = binding.favouriteMark
-        private val defaultTextColors: ColorStateList = title.textColors
-        private val readTextColors: ColorStateList = title.textColors.withAlpha(90)
+        private val rssEntryLayout = binding.rssEntry
+        private val title = binding.rssEntryTitle
+        private val shortDescription = binding.rssEntryShortDescription
+        private val image = binding.rssEntryImage
+        private val favouriteMark = binding.favouriteMark
+        private val defaultTextColors = binding.textColorMarker.textColors
+        private val readTextColors = binding.textColorMarker.textColors.withAlpha(90)
 
         fun bind(rssEntry: RssEntry) {
             title.text = rssEntry.title

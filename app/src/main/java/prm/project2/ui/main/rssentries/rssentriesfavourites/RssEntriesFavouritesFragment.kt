@@ -5,6 +5,5 @@ import prm.project2.ui.main.rssentries.RssEntriesFragment
 import prm.project2.ui.main.rssentries.RssEntriesViewModel
 
 class RssEntriesFavouritesFragment : RssEntriesFragment() {
-    private val viewModel: RssEntriesFavouritesViewModel by activityViewModels()
-    override fun viewModel(): RssEntriesViewModel = viewModel
+    override val viewModel: RssEntriesFavouritesViewModel by activityViewModels()
 }

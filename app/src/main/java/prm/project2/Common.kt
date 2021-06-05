@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 object Common {
     const val DB_NAME = "read-rss-entries.db"
 
+    const val POLAND_COUNTRY_CODE = "PL"
+
     const val INTENT_DATA_GUID = "INTENT_DATA_GUID"
     const val INTENT_DATA_TITLE = "INTENT_DATA_TITLE"
     const val INTENT_DATA_LINK = "INTENT_DATA_LINK"

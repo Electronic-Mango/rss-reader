@@ -1,25 +1,37 @@
 package prm.project2.ui.main
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.app.ProgressDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.location.Geocoder
+import android.location.Location
+import android.location.LocationManager
+import android.location.LocationManager.GPS_PROVIDER
+import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
-import androidx.viewpager.widget.ViewPager
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.GooglePlayServicesUtil
+import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.security.ProviderInstaller
-import com.google.android.material.tabs.TabLayout
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.material.snackbar.BaseTransientBottomBar.Behavior
+import com.google.android.material.snackbar.Snackbar
 import prm.project2.Common.DB_NAME
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
@@ -28,6 +40,7 @@ import prm.project2.Common.INTENT_DATA_FAVOURITE
 import prm.project2.Common.INTENT_DATA_GUID
 import prm.project2.Common.INTENT_DATA_LINK
 import prm.project2.Common.INTENT_DATA_TITLE
+import prm.project2.Common.POLAND_COUNTRY_CODE
 import prm.project2.R
 import prm.project2.database.ReadRssGuid
 import prm.project2.database.ReadRssGuidDatabase
@@ -41,11 +54,13 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.*
 import java.util.stream.Collectors.toList
 import kotlin.concurrent.thread
 
 private const val RSS_LINK_POLAND = "https://www.polsatnews.pl/rss/polska.xml"
 private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.xml"
+private const val LOCATION_PERMISSION_REQUEST = 100
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,20 +69,20 @@ class MainActivity : AppCompatActivity() {
     private val showRssEntryDetails = registerForActivityResult(StartActivityForResult()) {
         handleRssEntryDetailsResponse(it)
     }
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var database: ReadRssGuidDatabase
+    private val locationClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
+    private val locationCancellationToken by lazy { CancellationTokenSource().token }
+    private val database by lazy { Room.databaseBuilder(this, ReadRssGuidDatabase::class.java, DB_NAME).build() }
+    private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        database = Room.databaseBuilder(this, ReadRssGuidDatabase::class.java, DB_NAME).build()
         setContentView(R.layout.activity_main)
-        binding = ActivityMainBinding.inflate(layoutInflater)
 
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
         setupViewPager()
         installSecurityProvider()
-        loadRss()
+        checkLocationPermissionAndCurrentLocation()
 
         rssEntriesAllViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
         rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
@@ -76,27 +91,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.menu_main_activity, menu)
+        menuInflater.inflate(R.menu.menu_main_activity, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.refresh -> {
-                loadRss()
-                true
-            }
+            R.id.refresh -> checkLocationPermissionAndCurrentLocation()
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     private fun setupViewPager() {
-        val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
-        val viewPager: ViewPager = binding.viewPager
-        viewPager.adapter = sectionsPagerAdapter
-        val tabs: TabLayout = binding.tabs
-        tabs.setupWithViewPager(viewPager)
+        binding.viewPager.adapter = SectionsPagerAdapter(this, supportFragmentManager)
+        binding.tabs.setupWithViewPager(binding.viewPager)
     }
 
     private fun installSecurityProvider() {
@@ -110,11 +118,75 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadRss() {
-        val dialog = ProgressDialog.show(this, "", "Ładowanie danych...")
+    private fun checkLocationPermissionAndCurrentLocation(): Boolean {
+        showIndefiniteSnackbar(binding.viewPager, "Określanie lokalizacji...")
+        if (checkPermissions(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)) {
+            requestPermissions(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST)
+        } else {
+            checkCurrentLocation()
+        }
+        return true
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        when (requestCode) {
+            LOCATION_PERMISSION_REQUEST -> handleLocationRequestResult(permissions, grantResults)
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
+
+    private fun handleLocationRequestResult(permissions: Array<out String>, grantResults: IntArray) {
+        if (checkLocationRequestResults(permissions, grantResults)) {
+            checkCurrentLocation()
+        } else {
+            loadRssWithoutLocationData()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkCurrentLocation() {
+        if (isLocationEnabled()) {
+            requestNewLocationData()
+        } else {
+            loadRssWithoutLocationData("Lokalizacja nie jest włączona")
+        }
+    }
+
+    private fun isLocationEnabled(): Boolean {
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(GPS_PROVIDER) || locationManager.isProviderEnabled(NETWORK_PROVIDER)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun requestNewLocationData() {
+        locationClient.getCurrentLocation(PRIORITY_HIGH_ACCURACY, locationCancellationToken)
+            .addOnCompleteListener { handleLocationUpdate(it.result) }
+    }
+
+    private fun handleLocationUpdate(location: Location?) {
+        if (location == null) {
+            loadRssWithoutLocationData()
+            return
+        }
+        val countryCode = getCountryCodeFromLocation(location)
+        if (countryCode == null) {
+            loadRssWithoutLocationData("Lokalizacja nie mogła być określona")
+        } else {
+            val rssLink = if (countryCode == POLAND_COUNTRY_CODE) RSS_LINK_POLAND else RSS_LINK_INTERNATIONAL
+            val loadingMessage = if (rssLink == RSS_LINK_POLAND) "z Polski" else "międzynarodowych"
+            loadRss(rssLink, "Ładowanie wiadomości ${loadingMessage}...")
+        }
+    }
+
+    private fun loadRssWithoutLocationData(message: String = "Brak danych lokalizacji") {
+        loadRss(RSS_LINK_INTERNATIONAL, "$message, ładowanie wiadomości międzynarodowych...")
+    }
+
+    private fun loadRss(rssLink: String, message: String) {
+        val loadingDataSnackbar = showIndefiniteSnackbar(binding.viewPager, message)
         thread {
             val existingReadEntries = database.readRssGuidDao().getAll()
-            val connection = URL(RSS_LINK_POLAND).openConnection() as HttpURLConnection
+            val connection = URL(rssLink).openConnection() as HttpURLConnection
             parseRssStream(connection.inputStream).stream()
                 .filter { newEntry -> newEntry.guid.isNotBlank() && newEntry.title.isNotBlank() }
                 .peek { newEntry -> newEntry.image = loadBitmap(newEntry.imageUrl) }
@@ -127,7 +199,7 @@ class MainActivity : AppCompatActivity() {
                         .collect(toList()).let { database.readRssGuidDao().insertAll(it) }
                     runOnUiThread {
                         rssEntriesAllViewModel.setEntries(loadedEntries)
-                        dialog.dismiss()
+                        loadingDataSnackbar.dismiss()
                     }
                 }
         }
@@ -196,5 +268,30 @@ class MainActivity : AppCompatActivity() {
                 modifiedEntryFav?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
             }
         }
+    }
+
+    private fun showIndefiniteSnackbar(view: View, message: String): Snackbar {
+        return Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE).apply {
+            behavior = object : Behavior() {
+                override fun canSwipeDismissView(child: View): Boolean = false
+            }
+            show()
+        }
+    }
+
+    private fun checkPermissions(vararg permissions: String): Boolean {
+        return permissions.map { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.all { it }
+    }
+
+    private fun checkLocationRequestResults(permissions: Array<out String>, grantResults: IntArray): Boolean {
+        return permissions.contains(ACCESS_COARSE_LOCATION)
+                && permissions.contains(ACCESS_FINE_LOCATION)
+                && grantResults[permissions.indexOf(ACCESS_COARSE_LOCATION)] == PackageManager.PERMISSION_GRANTED
+                && grantResults[permissions.indexOf(ACCESS_FINE_LOCATION)] == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun getCountryCodeFromLocation(location: Location): String? {
+        return Geocoder(this, Locale.getDefault()).getFromLocation(location.latitude, location.longitude, 1)
+            .firstOrNull()?.countryCode
     }
 }

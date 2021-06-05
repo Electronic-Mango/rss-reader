@@ -10,16 +10,14 @@ import prm.project2.databinding.FragmentRssEntriesBinding
 
 abstract class RssEntriesFragment : Fragment() {
 
-    private val binding get() = _binding!!
-    private var _binding: FragmentRssEntriesBinding? = null
-
-    protected abstract fun viewModel(): RssEntriesViewModel
+    protected abstract val viewModel: RssEntriesViewModel
+    private lateinit var binding: FragmentRssEntriesBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentRssEntriesBinding.inflate(inflater, container, false)
+        binding = FragmentRssEntriesBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -27,12 +25,7 @@ abstract class RssEntriesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.rssEntriesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = RssEntriesRecyclerViewAdapter(viewModel(), viewLifecycleOwner)
+            adapter = RssEntriesRecyclerViewAdapter(viewModel, viewLifecycleOwner)
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import prm.project2.rssentries.RssEntry
 
 abstract class RssEntriesViewModel : ViewModel() {
-    private val mutableEntries = MutableLiveData<List<RssEntry>>()
+    private val mutableEntries = MutableLiveData<List<RssEntry>>().apply { value = ArrayList() }
     val entries: LiveData<List<RssEntry>> = mutableEntries
 
     private val mutableEntryToDisplay = MutableLiveData<RssEntry>()
@@ -14,10 +14,6 @@ abstract class RssEntriesViewModel : ViewModel() {
 
     private val mutableEntryToToggleFavourite = MutableLiveData<RssEntry>()
     val entryToToggleFavourite = mutableEntryToToggleFavourite
-
-    init {
-        setEntries(ArrayList())
-    }
 
     fun setEntries(entries: List<RssEntry>) {
         mutableEntries.value = entries

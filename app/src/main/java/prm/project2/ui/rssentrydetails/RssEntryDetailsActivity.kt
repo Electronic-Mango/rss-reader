@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-import com.google.android.material.snackbar.Snackbar.LENGTH_SHORT
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
 import prm.project2.Common.INTENT_DATA_DESCRIPTION
@@ -70,9 +69,9 @@ class RssEntryDetailsActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.share -> { shareRssEntry() }
-            R.id.favourite -> { switchFavourite(item) }
-            android.R.id.home -> { finishActivity() }
+            R.id.share -> shareRssEntry()
+            R.id.favourite -> switchFavourite(item)
+            android.R.id.home -> finishActivity()
             else -> super.onOptionsItemSelected(item)
         }
     }
