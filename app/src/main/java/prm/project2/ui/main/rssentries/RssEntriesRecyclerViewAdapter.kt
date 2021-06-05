@@ -1,14 +1,10 @@
 package prm.project2.ui.main.rssentries
 
-import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
@@ -63,7 +59,7 @@ class RssEntriesRecyclerViewAdapter(val viewModel: RssEntriesViewModel, lifecycl
             title.setTextColor(color)
             shortDescription.setTextColor(color)
         }
-
-        private fun Bitmap.square() = createBitmap(this, width / 2 - height / 2, 0, height, height)
     }
 }
+
+private fun Bitmap.square() = createBitmap(this, width / 2 - height / 2, 0, height, height)

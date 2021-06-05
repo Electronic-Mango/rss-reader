@@ -26,13 +26,12 @@ private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")
 
 class RssEntryDetailsActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityRssEntryDetailsBinding
+    private val binding by lazy { ActivityRssEntryDetailsBinding.inflate(layoutInflater) }
     private lateinit var rssEntry: RssEntry
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        binding = ActivityRssEntryDetailsBinding.inflate(layoutInflater)
+        
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbarRrsEntryDetails)

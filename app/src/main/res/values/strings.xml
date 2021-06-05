@@ -2,5 +2,13 @@
     <string name="app_name">Czytnik RSS</string>
     <string name="tab_title_all">Wszystkie</string>
     <string name="tab_title_favourites">Ulubione</string>
-    <string name="title_activity_rss_entry_details"></string>
+    <string name="title_activity_rss_entry_details">Szczegóły wydarzenia</string>
+    <string name="title_activity_login">Zaloguj się lub załóż konto</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Hasło</string>
+    <string name="action_sign_in">Zaloguj się lub załóż konto</string>
+    <string name="action_sign_in_short">Zaloguj się</string>
+    <string name="invalid_email">Niepoprawny adres email</string>
+    <string name="invalid_password">Hasło musi składać się z 5 znaków i conajmniej jednej cyfry</string>
+    <string name="login_failed">Błąd logowania, niepoprawne hasło</string>
 </resources>

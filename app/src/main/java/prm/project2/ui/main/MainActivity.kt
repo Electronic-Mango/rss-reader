@@ -5,7 +5,7 @@ import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Geocoder
@@ -23,6 +23,9 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.GooglePlayServicesUtil
@@ -47,6 +50,8 @@ import prm.project2.database.ReadRssGuidDatabase
 import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.parseRssStream
+import prm.project2.ui.FirebaseUtils.firebaseAuth
+import prm.project2.ui.login.LoginActivity
 import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
 import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesViewModel
 import prm.project2.ui.rssentrydetails.RssEntryDetailsActivity
@@ -54,20 +59,26 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.*
+import java.util.Locale
 import java.util.stream.Collectors.toList
 import kotlin.concurrent.thread
 
 private const val RSS_LINK_POLAND = "https://www.polsatnews.pl/rss/polska.xml"
 private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.xml"
-private const val LOCATION_PERMISSION_REQUEST = 100
+private const val LOCATION_REQUEST_ID = 100
 
 class MainActivity : AppCompatActivity() {
 
     private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()
     private val rssEntriesFavouritesViewModel: RssEntriesFavouritesViewModel by viewModels()
-    private val showRssEntryDetails = registerForActivityResult(StartActivityForResult()) {
+    private val showRssEntryDetailsActivityResult = registerForActivityResult(StartActivityForResult()) {
         handleRssEntryDetailsResponse(it)
+    }
+    private val loginActivityResult = registerForActivityResult(StartActivityForResult()) {
+        if (it.resultCode == RESULT_CANCELED) {
+            finish()
+        }
+        // TODO: Consider some kind of response for login, perhaps small UI indication + logout possibility?
     }
     private val locationClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private val locationCancellationToken by lazy { CancellationTokenSource().token }
@@ -77,6 +88,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        firebaseAuth.signOut()
+
+        if (firebaseAuth.currentUser == null) {
+            Intent(this, LoginActivity::class.java).let { loginActivityResult.launch(it) }
+        }
 
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
@@ -120,8 +137,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkLocationPermissionAndCurrentLocation(): Boolean {
         showIndefiniteSnackbar(binding.viewPager, "Określanie lokalizacji...")
-        if (checkPermissions(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)) {
-            requestPermissions(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST)
+        if (!checkPermissionsGranted(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)) {
+            requestPermissions(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), LOCATION_REQUEST_ID)
         } else {
             checkCurrentLocation()
         }
@@ -130,7 +147,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
-            LOCATION_PERMISSION_REQUEST -> handleLocationRequestResult(permissions, grantResults)
+            LOCATION_REQUEST_ID -> handleLocationRequestResult(permissions, grantResults)
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
     }
@@ -139,7 +156,7 @@ class MainActivity : AppCompatActivity() {
         if (checkLocationRequestResults(permissions, grantResults)) {
             checkCurrentLocation()
         } else {
-            loadRssWithoutLocationData()
+            loadRssWithoutLocationData("Brak dostępu do lokalizacji")
         }
     }
 
@@ -224,8 +241,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun String.toEntity(): ReadRssGuid = ReadRssGuid(this)
-
     private fun runFullRssEntryDetailsActivity(rssEntry: RssEntry) {
         val intent = Intent(this, RssEntryDetailsActivity::class.java).apply {
             putExtra(INTENT_DATA_GUID, rssEntry.guid)
@@ -236,7 +251,8 @@ class MainActivity : AppCompatActivity() {
             putExtra(INTENT_DATA_FAVOURITE, rssEntry.favourite)
         }
         IMAGE_TO_SHOW = rssEntry.image
-        showRssEntryDetails.launch(intent)
+
+        showRssEntryDetailsActivityResult.launch(intent)
     }
 
     private fun toggleFavouriteOnRssEntry(rssEntry: RssEntry) {
@@ -279,15 +295,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkPermissions(vararg permissions: String): Boolean {
-        return permissions.map { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }.all { it }
+    private fun checkPermissionsGranted(vararg permissions: String): Boolean {
+        return permissions.map { checkSelfPermission(it) == PERMISSION_GRANTED }.all { it }
     }
 
     private fun checkLocationRequestResults(permissions: Array<out String>, grantResults: IntArray): Boolean {
         return permissions.contains(ACCESS_COARSE_LOCATION)
                 && permissions.contains(ACCESS_FINE_LOCATION)
-                && grantResults[permissions.indexOf(ACCESS_COARSE_LOCATION)] == PackageManager.PERMISSION_GRANTED
-                && grantResults[permissions.indexOf(ACCESS_FINE_LOCATION)] == PackageManager.PERMISSION_GRANTED
+                && grantResults[permissions.indexOf(ACCESS_COARSE_LOCATION)] == PERMISSION_GRANTED
+                && grantResults[permissions.indexOf(ACCESS_FINE_LOCATION)] == PERMISSION_GRANTED
     }
 
     private fun getCountryCodeFromLocation(location: Location): String? {
@@ -295,3 +311,5 @@ class MainActivity : AppCompatActivity() {
             .firstOrNull()?.countryCode
     }
 }
+
+private fun String.toEntity(): ReadRssGuid = ReadRssGuid(this)
