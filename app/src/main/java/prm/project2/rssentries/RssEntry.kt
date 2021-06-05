@@ -10,7 +10,7 @@ data class RssEntry(
     val description: String?,
     val date: LocalDateTime?,
     val imageUrl: String?,
-    var image: Bitmap?,
+    var image: Bitmap? = null,
     var favourite: Boolean = false,
     var read: Boolean = false
 )

@@ -39,6 +39,6 @@ abstract class RssEntriesViewModel : ViewModel() {
     }
 
     protected fun refreshEntries() {
-        entries.value?.let{ setEntries(it) }
+        entries.value?.let { setEntries(it) }
     }
 }

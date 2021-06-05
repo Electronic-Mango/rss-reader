@@ -52,10 +52,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
+
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
         setupViewPager()
         loadRss()
+
         rssEntriesAllViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
         rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
         rssEntriesAllViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
@@ -157,5 +159,4 @@ class MainActivity : AppCompatActivity() {
         val modifiedEntry = rssEntriesAllViewModel.updateEntry(guid, favourite, markAsRead)
         rssEntriesFavouritesViewModel.updateEntry(guid, favourite, modifiedEntry, markAsRead)
     }
-
 }

@@ -27,13 +27,8 @@ abstract class RssEntriesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.rssEntriesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
+            adapter = RssEntriesRecyclerViewAdapter(viewModel(), viewLifecycleOwner)
         }
-        viewModel().entries.observe(viewLifecycleOwner, {
-            binding.rssEntriesRecyclerView.apply {
-                this.
-                adapter = RssEntriesRecyclerViewAdapter(viewModel(), it)
-            }
-        })
     }
 
     override fun onDestroyView() {

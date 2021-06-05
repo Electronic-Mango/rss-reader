@@ -9,6 +9,7 @@ class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
     fun updateEntry(guid: String?, favourite: Boolean, rssEntry: RssEntry?, markAsRead: Boolean = true) {
         val entry = getEntry(guid) ?: rssEntry ?: return
         entry.read = entry.read || markAsRead
+        Log.d("UPDATE-FAVOURITE-ENTRIES", "${entry.read}, $favourite, $entry")
         val entryExists = entryExists(entry)
         if (entryExists && !favourite) {
             removeEntry(entry)
@@ -19,7 +20,7 @@ class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
         }
     }
 
-    private fun addEntry(rssEntry:RssEntry) {
+    private fun addEntry(rssEntry: RssEntry) {
         (entries.value?.toMutableList() ?: ArrayList()).apply {
             add(0, rssEntry)
             setEntries(this)

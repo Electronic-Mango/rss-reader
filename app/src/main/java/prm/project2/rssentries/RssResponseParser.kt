@@ -62,7 +62,7 @@ private fun readEntry(parser: XmlPullParser): RssEntry {
             else -> skip(parser)
         }
     }
-    return RssEntry(guid, title, link, description, date, enclosure, null)
+    return RssEntry(guid, title, link, description, date, enclosure)
 }
 
 @Throws(IOException::class, XmlPullParserException::class)

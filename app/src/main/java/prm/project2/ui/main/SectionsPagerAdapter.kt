@@ -3,16 +3,11 @@ package prm.project2.ui.main
 import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
 import androidx.fragment.app.FragmentStatePagerAdapter
 import prm.project2.R
 import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllFragment
 import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesFragment
 
-/**
- * A [FragmentPagerAdapter] that returns a fragment corresponding to
- * one of the sections/tabs/pages.
- */
 class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) :
     FragmentStatePagerAdapter(fragmentManager) {
 
