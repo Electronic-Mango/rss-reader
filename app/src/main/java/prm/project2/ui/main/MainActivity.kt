@@ -93,6 +93,12 @@ class MainActivity : AppCompatActivity() {
             parseRssStream(connection.inputStream).stream()
                 .filter { it.guid != null && it.title != null }
                 .peek { it.image = loadBitmap(it.imageUrl) }
+                .peek { newEntry ->
+                    rssEntriesAllViewModel.getEntry(newEntry.guid)?.let {
+                        newEntry.read = it.read
+                        newEntry.favourite = it.favourite
+                    }
+                }
                 .collect(toList()).let {
                     runOnUiThread {
                         rssEntriesAllViewModel.setEntries(it)

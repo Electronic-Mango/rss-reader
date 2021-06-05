@@ -27,7 +27,7 @@ abstract class RssEntriesViewModel : ViewModel() {
         mutableEntryToDisplay.value = entry
     }
 
-    protected fun getEntry(guid: String?): RssEntry? {
+    fun getEntry(guid: String?): RssEntry? {
         return entries.value?.stream()?.filter {
             it.guid == guid
         }?.findFirst()?.orElseGet { null }

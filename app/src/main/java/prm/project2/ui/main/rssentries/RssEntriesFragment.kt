@@ -25,9 +25,12 @@ abstract class RssEntriesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.rssEntriesRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+        }
         viewModel().entries.observe(viewLifecycleOwner, {
             binding.rssEntriesRecyclerView.apply {
-                layoutManager = LinearLayoutManager(requireContext())
+                this.
                 adapter = RssEntriesRecyclerViewAdapter(viewModel(), it)
             }
         })
