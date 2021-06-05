@@ -14,6 +14,9 @@ interface ReadRssGuidDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(guid: ReadRssGuid): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertAll(guids: List<ReadRssGuid>)
+
     @Query("DELETE FROM ReadRssGuid")
     fun deleteAll()
 

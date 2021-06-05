@@ -15,6 +15,10 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import androidx.viewpager.widget.ViewPager
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.common.GooglePlayServicesUtil
+import com.google.android.gms.security.ProviderInstaller
 import com.google.android.material.tabs.TabLayout
 import prm.project2.Common.DB_NAME
 import prm.project2.Common.IMAGE_TO_SHOW
@@ -62,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
         setupViewPager()
+        installSecurityProvider()
         loadRss()
 
         rssEntriesAllViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
@@ -94,30 +99,38 @@ class MainActivity : AppCompatActivity() {
         tabs.setupWithViewPager(viewPager)
     }
 
+    private fun installSecurityProvider() {
+        try {
+            ProviderInstaller.installIfNeeded(this)
+        } catch (exception: GooglePlayServicesRepairableException) {
+            Log.w("GP-SECURITY", "Google Play is not available, but repairable!")
+            GooglePlayServicesUtil.getErrorDialog(exception.connectionStatusCode, this, 0)
+        } catch (exception: GooglePlayServicesNotAvailableException) {
+            Log.w("GP-SECURITY", "Google Play is not installed!")
+        }
+    }
+
     private fun loadRss() {
         val dialog = ProgressDialog.show(this, "", "Ładowanie danych...")
         thread {
-            val existingReadEntries = loadReadRssEntriesAndClearDb()
+            val existingReadEntries = database.readRssGuidDao().getAll()
             val connection = URL(RSS_LINK_POLAND).openConnection() as HttpURLConnection
             parseRssStream(connection.inputStream).stream()
                 .filter { newEntry -> newEntry.guid.isNotBlank() && newEntry.title.isNotBlank() }
                 .peek { newEntry -> newEntry.image = loadBitmap(newEntry.imageUrl) }
                 .peek(this::markAsReadAndFavouriteIfRequired)
                 .peek { newEntry -> newEntry.read = existingReadEntries.contains(newEntry.guid.toEntity()) }
-                .peek { newEntry -> if (newEntry.read) database.readRssGuidDao().insert(newEntry.guid.toEntity()) }
                 .collect(toList()).let { loadedEntries ->
+                    database.readRssGuidDao().deleteAll()
+                    loadedEntries.stream().filter { it.read }
+                        .map { it.guid.toEntity() }
+                        .collect(toList()).let { database.readRssGuidDao().insertAll(it) }
                     runOnUiThread {
                         rssEntriesAllViewModel.setEntries(loadedEntries)
                         dialog.dismiss()
                     }
                 }
         }
-    }
-
-    private fun loadReadRssEntriesAndClearDb(): List<ReadRssGuid> {
-        val readEntries = database.readRssGuidDao().getAll()
-        database.readRssGuidDao().deleteAll()
-        return readEntries
     }
 
     private fun loadBitmap(url: String?): Bitmap? = url?.let {
