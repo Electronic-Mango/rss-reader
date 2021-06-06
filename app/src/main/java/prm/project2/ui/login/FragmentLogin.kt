@@ -116,7 +116,7 @@ class FragmentLogin : AbstractFragmentUserData() {
             if (it.isSuccessful) {
                 showSnackbar(password_reset_email_sent)
             } else {
-                showSnackbar(password_reset_email_error)
+                showSnackbar(email_sending_error)
                     .setAction(getString(resent_password_reset_email_action)) { resetPassword() }
             }
         }

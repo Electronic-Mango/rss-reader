@@ -14,7 +14,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
 import prm.project2.FirebaseCommon.firebaseAuth
-import prm.project2.R
+import prm.project2.R.id.move_to_login
+import prm.project2.R.id.move_to_signup
+import prm.project2.R.string.default_web_client_id
+import prm.project2.R.string.google_login_failed
 import prm.project2.databinding.FragmentLoginOrSignupBinding
 import prm.project2.ui.CommonFragment
 import prm.project2.ui.main.MainActivity
@@ -30,12 +33,12 @@ class FragmentLoginOrSignup : CommonFragment() {
 
         googleLoginActivityResult = registerForActivityResult { handleGoogleLoginResult(it) }
         googleSingInClient = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestIdToken(getString(default_web_client_id))
             .requestEmail()
             .build().let { GoogleSignIn.getClient(activity, it) }
 
-        binding.moveToLogin.setOnClickListener { findNavController().navigate(R.id.move_to_login) }
-        binding.moveToSignup.setOnClickListener { findNavController().navigate(R.id.move_to_signup) }
+        binding.moveToLogin.setOnClickListener { findNavController().navigate(move_to_login) }
+        binding.moveToSignup.setOnClickListener { findNavController().navigate(move_to_signup) }
         binding.loginGoogle.setOnClickListener { googleLoginActivityResult.launch(googleSingInClient.signInIntent) }
 
         return binding.root
@@ -47,7 +50,7 @@ class FragmentLoginOrSignup : CommonFragment() {
             val account = signInTask.getResult(ApiException::class.java)
             firebaseAuthWithGoogle(account.idToken)
         } catch (exception: ApiException) {
-            showSnackbar(R.string.google_login_failed)
+            showSnackbar(google_login_failed)
         }
     }
 
@@ -58,7 +61,7 @@ class FragmentLoginOrSignup : CommonFragment() {
                 startActivity(Intent(context, MainActivity::class.java))
                 activity.finish()
             } else {
-                showSnackbar(R.string.google_login_failed)
+                showSnackbar(google_login_failed)
             }
         }
     }

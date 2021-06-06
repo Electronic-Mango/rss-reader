@@ -24,17 +24,17 @@ abstract class RssEntriesViewModel : ViewModel() {
     }
 
     fun getEntry(guid: String?): RssEntry? {
-        return entries.value?.stream()?.filter {
-            it.guid == guid
-        }?.findFirst()?.orElseGet { null }
+        return entries.value?.firstOrNull { it.guid == guid }
     }
+
+    protected fun guidExists(guid: String): Boolean = entries.value?.map { it.guid }?.contains(guid) ?: false
+
+    protected fun entryExists(rssEntry: RssEntry): Boolean = entries.value?.contains(rssEntry) ?: false
 
     fun toggleFavourite(rssEntry: RssEntry): Boolean {
         mutableEntryToToggleFavourite.value = rssEntry
         return true
     }
 
-    protected fun refreshEntries() {
-        entries.value?.let { setEntries(it) }
-    }
+    fun refreshEntries() = entries.value?.let { setEntries(it) }
 }

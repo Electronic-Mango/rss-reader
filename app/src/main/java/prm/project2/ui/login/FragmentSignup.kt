@@ -14,7 +14,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.AuthResult
 import prm.project2.FirebaseCommon
 import prm.project2.FirebaseCommon.createUserWithEmailAndPassword
-import prm.project2.R
+import prm.project2.R.id.from_signup_to_login
+import prm.project2.R.string.info_loading_user_data
+import prm.project2.R.string.signup_failed
 import prm.project2.databinding.FragmentSignupBinding
 
 /**
@@ -55,7 +57,7 @@ class FragmentSignup : AbstractFragmentUserData() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingSnackbar = showIndefiniteSnackbar(R.string.info_loading_user_data, false)
+        loadingSnackbar = showIndefiniteSnackbar(info_loading_user_data, false)
     }
 
     private fun signup() {
@@ -68,13 +70,13 @@ class FragmentSignup : AbstractFragmentUserData() {
         if (signInTask.isSuccessful) {
             sendEmailVerification {
                 loginFormViewModel.justSignedIn = true
-                findNavController().navigate(R.id.from_signup_to_login)
+                findNavController().navigate(from_signup_to_login)
                 loginFormViewModel.resetLoginData()
                 email.text.clear()
                 password.text.clear()
             }
         } else {
-            showSnackbar(R.string.signup_failed)
+            showSnackbar(signup_failed)
         }
     }
 }

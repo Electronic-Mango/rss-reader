@@ -8,6 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import prm.project2.Common
+import prm.project2.FirebaseCommon.firestoreData
+import prm.project2.R.string.*
+import prm.project2.rssentries.RssEntry
+import kotlin.concurrent.thread
 
 abstract class CommonActivity : AppCompatActivity() {
 
@@ -31,5 +35,25 @@ abstract class CommonActivity : AppCompatActivity() {
 
     protected fun registerForActivityResult(callback: (ActivityResult) -> Unit): ActivityResultLauncher<Intent> {
         return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { callback(it) }
+    }
+
+    protected fun addToFirestore(rssEntry: RssEntry) {
+        thread {
+            firestoreData.document(rssEntry.hash()).set(rssEntry.firebaseEntry()).addOnFailureListener {
+                showSnackbar(firestore_insert_error).setAction(getString(repeat_operation)) {
+                    addToFirestore(rssEntry)
+                }
+            }
+        }
+    }
+
+    protected fun removeFromFirestore(rssEntry: RssEntry) {
+        thread {
+            firestoreData.document(rssEntry.hash()).delete().addOnFailureListener {
+                showSnackbar(firestore_remove_error).setAction(getString(repeat_operation)) {
+                    removeFromFirestore(rssEntry)
+                }
+            }
+        }
     }
 }

@@ -4,19 +4,20 @@ import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
-import prm.project2.R
+import prm.project2.R.string.tab_title_all
+import prm.project2.R.string.tab_title_favourites
 import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllFragment
 import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesFragment
 
 class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) :
     FragmentStatePagerAdapter(fragmentManager) {
 
-    private val allRssEntries by lazy { RssEntriesAllFragment() }
-    private val favouriteRssEntries by lazy { RssEntriesFavouritesFragment() }
+    val allRssEntries by lazy { RssEntriesAllFragment() }
+    val favouriteRssEntries by lazy { RssEntriesFavouritesFragment() }
     private val pages by lazy {
         arrayOf(
-            Pair(R.string.tab_title_all, allRssEntries),
-            Pair(R.string.tab_title_favourites, favouriteRssEntries)
+            Pair(tab_title_all, allRssEntries),
+            Pair(tab_title_favourites, favouriteRssEntries)
         )
     }
 

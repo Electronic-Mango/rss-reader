@@ -8,7 +8,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import prm.project2.FirebaseCommon.firebaseUser
-import prm.project2.R
+import prm.project2.R.id.nav_host_fragment_content_login
 import prm.project2.databinding.ActivityLoginBinding
 import prm.project2.ui.CommonActivity
 import prm.project2.ui.main.MainActivity
@@ -30,13 +30,13 @@ class LoginActivity : CommonActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
-        val navController = findNavController(R.id.nav_host_fragment_content_login)
+        val navController = findNavController(nav_host_fragment_content_login)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_login)
+        val navController = findNavController(nav_host_fragment_content_login)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 }

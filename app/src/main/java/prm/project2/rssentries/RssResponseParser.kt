@@ -43,7 +43,7 @@ private fun readFeed(parser: XmlPullParser): List<RssEntry> {
 private fun readEntry(parser: XmlPullParser): RssEntry {
     parser.require(XmlPullParser.START_TAG, NAMESPACE, "item")
     var guid = ""
-    var title = ""
+    var title: String? = null
     var link: String? = null
     var description: String? = null
     var date: LocalDateTime? = null

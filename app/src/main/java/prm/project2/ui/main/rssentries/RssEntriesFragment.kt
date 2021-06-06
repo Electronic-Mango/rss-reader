@@ -11,7 +11,7 @@ import prm.project2.databinding.FragmentRssEntriesBinding
 abstract class RssEntriesFragment : Fragment() {
 
     protected abstract val viewModel: RssEntriesViewModel
-    private lateinit var binding: FragmentRssEntriesBinding
+    lateinit var binding: FragmentRssEntriesBinding
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

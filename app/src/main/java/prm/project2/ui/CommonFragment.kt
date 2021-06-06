@@ -21,21 +21,10 @@ abstract class CommonFragment : Fragment() {
         return Common.showIndefiniteSnackbar(requireView(), getString(messageId), show)
     }
 
-    protected fun showIndefiniteSnackbar(message: String, show: Boolean = true): Snackbar {
-        return Common.showIndefiniteSnackbar(requireView(), message, show)
-    }
-
     protected fun showSnackbar(messageId: Int): Snackbar {
         return Common.showSnackbar(requireView(), getString(messageId))
     }
 
-    protected fun showSnackbar(message: String): Snackbar {
-        return Common.showSnackbar(requireView(), message)
-    }
-
-    /**
-     * Extension function to simplify setting an afterTextChanged action to EditText components.
-     */
     protected fun EditText.afterTextChanged(afterTextChanged: (String) -> Unit) {
         this.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable?) {

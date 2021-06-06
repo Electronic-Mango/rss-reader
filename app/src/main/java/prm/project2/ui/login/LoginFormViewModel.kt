@@ -6,7 +6,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import prm.project2.Common.toText
-import prm.project2.R
+import prm.project2.R.string.invalid_email
+import prm.project2.R.string.invalid_password
 
 class LoginFormViewModel : ViewModel() {
 
@@ -19,9 +20,9 @@ class LoginFormViewModel : ViewModel() {
 
     private fun loginDataChanged(email: String, password: String) {
         if (!isEmailValid(email)) {
-            _loginForm.value = LoginFormState(emailError = R.string.invalid_email)
+            _loginForm.value = LoginFormState(emailError = invalid_email)
         } else if (!isPasswordValid(password)) {
-            _loginForm.value = LoginFormState(passwordError = R.string.invalid_password, isEmailValid = true)
+            _loginForm.value = LoginFormState(passwordError = invalid_password, isEmailValid = true)
         } else {
             _loginForm.value = LoginFormState(isEmailValid = true, isPasswordValid = true)
         }

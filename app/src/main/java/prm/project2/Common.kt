@@ -1,26 +1,19 @@
 package prm.project2
 
 import android.app.Activity
-import android.graphics.Bitmap
 import android.view.View
 import android.widget.EditText
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
+import prm.project2.rssentries.RssEntry
 
 object Common {
-    const val DB_NAME = "read-rss-entries.db"
 
     const val POLAND_COUNTRY_CODE = "PL"
 
-    const val INTENT_DATA_GUID = "INTENT_DATA_GUID"
-    const val INTENT_DATA_TITLE = "INTENT_DATA_TITLE"
-    const val INTENT_DATA_LINK = "INTENT_DATA_LINK"
-    const val INTENT_DATA_DESCRIPTION = "INTENT_DATA_DESCRIPTION"
-    const val INTENT_DATA_DATE = "INTENT_DATA_DATE"
-    const val INTENT_DATA_FAVOURITE = "INTENT_DATA_FAVOURITE"
-    var IMAGE_TO_SHOW: Bitmap? = null
+    var RSS_ENTRY_TO_SHOW: RssEntry? = null
 
     fun showIndefiniteSnackbar(view: View, message: String, show: Boolean = true): Snackbar {
         return Snackbar.make(view, message, LENGTH_INDEFINITE).apply {
@@ -42,8 +35,4 @@ object Common {
     }
 
     fun EditText.toText(): String = this.text.toString()
-}
-
-open class Callback {
-    open fun call() {}
 }

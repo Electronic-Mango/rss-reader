@@ -18,35 +18,33 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
-import androidx.room.Room
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.GooglePlayServicesUtil
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.security.ProviderInstaller
+import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
-import prm.project2.Common.DB_NAME
-import prm.project2.Common.IMAGE_TO_SHOW
-import prm.project2.Common.INTENT_DATA_DATE
-import prm.project2.Common.INTENT_DATA_DESCRIPTION
-import prm.project2.Common.INTENT_DATA_FAVOURITE
-import prm.project2.Common.INTENT_DATA_GUID
-import prm.project2.Common.INTENT_DATA_LINK
-import prm.project2.Common.INTENT_DATA_TITLE
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.QuerySnapshot
 import prm.project2.Common.POLAND_COUNTRY_CODE
+import prm.project2.Common.RSS_ENTRY_TO_SHOW
 import prm.project2.FirebaseCommon.firebaseAuth
 import prm.project2.FirebaseCommon.firebaseUser
+import prm.project2.FirebaseCommon.firestoreData
 import prm.project2.R
+import prm.project2.R.id.account_logout
+import prm.project2.R.id.refresh
 import prm.project2.R.string.*
-import prm.project2.database.ReadRssGuid
-import prm.project2.database.ReadRssGuidDatabase
 import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
+import prm.project2.rssentries.getEntry
 import prm.project2.rssentries.parseRssStream
+import prm.project2.rssentries.toRssEntry
 import prm.project2.ui.CommonActivity
 import prm.project2.ui.login.LoginActivity
 import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
@@ -57,20 +55,22 @@ import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.*
-import java.util.stream.Collectors.toList
 import kotlin.concurrent.thread
 
 private const val RSS_LINK_POLAND = "https://www.polsatnews.pl/rss/polska.xml"
 private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.xml"
 private const val LOCATION_REQUEST_ID = 100
 
+private const val GOOGLE_PLAY_TAG = "MAIN-ACTIVITY-GP-SECURITY"
+private const val BITMAP_LOADING_TAG = "MAIN-ACTIVITY-LOADING-IMG"
+private const val LOADING_RSS_DATA_TAG = "MAIN-ACTIVITY-LOADING-RSS-DATA"
+
 class MainActivity : CommonActivity() {
 
     private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()
     private val rssEntriesFavouritesViewModel: RssEntriesFavouritesViewModel by viewModels()
-    private val locationClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
-    private val locationCancellationToken by lazy { CancellationTokenSource().token }
-    private val database by lazy { Room.databaseBuilder(this, ReadRssGuidDatabase::class.java, DB_NAME).build() }
+    private lateinit var locationClient: FusedLocationProviderClient
+    private lateinit var locationCancellationToken: CancellationToken
     private lateinit var binding: ActivityMainBinding
     private lateinit var showRssEntryDetailsActivityResult: ActivityResultLauncher<Intent>
     override val snackbarView: View
@@ -80,18 +80,21 @@ class MainActivity : CommonActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_main)
-
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
+
+        locationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationCancellationToken = CancellationTokenSource().token
+
         setupViewPager()
         installSecurityProvider()
         checkLocationPermissionAndCurrentLocation()
 
-        rssEntriesAllViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
-        rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
+        rssEntriesAllViewModel.entryToDisplay.observe(this, { launchFullRssEntryDetailsActivity(it) })
+        rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { launchFullRssEntryDetailsActivity(it) })
         rssEntriesAllViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
         rssEntriesFavouritesViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
-        showRssEntryDetailsActivityResult = registerForActivityResult { handleRssEntryDetailsResponse(it) }
+        showRssEntryDetailsActivityResult = registerForActivityResult { handleRssEntryDetailsResponse() }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -101,11 +104,11 @@ class MainActivity : CommonActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.refresh -> {
+            refresh -> {
                 checkLocationPermissionAndCurrentLocation()
                 true
             }
-            R.id.account_logout -> {
+            account_logout -> {
                 signOutAndSwitchToLoginActivity()
                 true
             }
@@ -122,10 +125,10 @@ class MainActivity : CommonActivity() {
         try {
             ProviderInstaller.installIfNeeded(this)
         } catch (exception: GooglePlayServicesRepairableException) {
-            Log.w("GP-SECURITY", "Google Play is not available, but repairable!")
+            Log.e(GOOGLE_PLAY_TAG, "Google Play is not available, but repairable!")
             GooglePlayServicesUtil.getErrorDialog(exception.connectionStatusCode, this, 0)
         } catch (exception: GooglePlayServicesNotAvailableException) {
-            Log.w("GP-SECURITY", "Google Play is not installed!")
+            Log.e(GOOGLE_PLAY_TAG, "Google Play is not installed!")
         }
     }
 
@@ -195,56 +198,82 @@ class MainActivity : CommonActivity() {
     private fun loadRss(rssLink: String, message: String) {
         val loadingDataSnackbar = showIndefiniteSnackbar(message)
         thread {
-            val existingReadEntries = database.readRssGuidDao().getAll()
-            val connection = URL(rssLink).openConnection() as HttpURLConnection
-            val loadedEntries = parseRssStream(connection.inputStream).stream()
-                .filter { newEntry -> newEntry.guid.isNotBlank() && newEntry.title.isNotBlank() }
-                .peek { newEntry -> newEntry.image = loadBitmap(newEntry.imageUrl) }
-                .peek(this::markAsReadAndFavouriteIfRequired)
-                .peek { newEntry -> newEntry.read = existingReadEntries.contains(newEntry.guid.toEntity()) }
-                .collect(toList())
-            database.readRssGuidDao().deleteAll()
-            loadedEntries.stream()
-                .filter { it.read }
-                .map { it.guid.toEntity() }
-                .collect(toList()).let { database.readRssGuidDao().insertAll(it) }
-            runOnUiThread {
-                rssEntriesAllViewModel.setEntries(loadedEntries)
-                loadingDataSnackbar.dismiss()
+            firestoreData.get()
+                .addOnSuccessListener { firestoreDataRetrieveSuccess(it, rssLink, loadingDataSnackbar, message) }
+                .addOnFailureListener { firestoreDataRetrieveFailure(rssLink, message) }
+        }
+    }
+
+    private fun firestoreDataRetrieveSuccess(
+        query: QuerySnapshot,
+        rssLink: String,
+        loadingDataSnackbar: Snackbar,
+        loadingDataMessage: String
+    ) {
+        thread {
+            try {
+                loadAndHandleRssDataThread(query, rssLink, loadingDataSnackbar)
+            } catch (e: Exception) {
+                Log.e(LOADING_RSS_DATA_TAG, "Exception encountered when loading RSS: ${e.stackTraceToString()}.")
+                firestoreDataRetrieveFailure(rssLink, loadingDataMessage)
             }
         }
+    }
+
+    private fun firestoreDataRetrieveFailure(rssLink: String, message: String) {
+        showSnackbar(loading_rss_data_error).setAction(getString(repeat_operation)) {
+            loadRss(rssLink, message)
+        }
+    }
+
+    private fun loadAndHandleRssDataThread(query: QuerySnapshot, rssLink: String, loadingDataSnackbar: Snackbar) {
+        val firebaseEntries = query.documents.map { snapshot -> snapshot.toRssEntry() }
+        val connection = URL(rssLink).openConnection() as HttpURLConnection
+        val newEntries = parseRssStream(connection.inputStream).asSequence()
+            .filter { it.guid.isNotBlank() }
+            .filter { it.title.isNotBlankNorNull() }
+            .onEach { it.image = loadBitmap(it.imageUrl) }
+            .onEach {
+                firebaseEntries.getEntry(it)?.let { firebaseEntry ->
+                    it.read = firebaseEntry.read
+                    it.favourite = firebaseEntry.favourite
+                }
+            }
+            .sortedByDescending { it.date }
+            .toList()
+        val favouriteFirebaseEntries = firebaseEntries.asSequence()
+            .filter { it.favourite }
+            .onEach { it.image = loadBitmap(it.imageUrl) }
+            .sortedByDescending { it.date }
+            .toList()
+        runOnUiThread {
+            rssEntriesAllViewModel.setEntries(newEntries)
+            rssEntriesFavouritesViewModel.setEntries(favouriteFirebaseEntries)
+            (binding.viewPager.adapter as SectionsPagerAdapter).apply {
+                allRssEntries.binding.rssEntriesRecyclerView.smoothScrollToPosition(0)
+                favouriteRssEntries.binding.rssEntriesRecyclerView.smoothScrollToPosition(0)
+            }
+            loadingDataSnackbar.dismiss()
+        }
+
     }
 
     private fun loadBitmap(url: String?): Bitmap? = url?.let {
         try {
             URL(url).openStream().let { BitmapFactory.decodeStream(it) }
         } catch (exception: MalformedURLException) {
-            Log.w("LOADING-IMG", "Malformed URL $url!")
+            Log.e(BITMAP_LOADING_TAG, "Malformed URL $url!")
             null
         } catch (exception: IOException) {
-            Log.w("LOADING-IMG", "I/O Exception when loading an image from $url!")
+            Log.e(BITMAP_LOADING_TAG, "I/O Exception when loading an image from $url!")
             null
         }
     }
 
-    private fun markAsReadAndFavouriteIfRequired(rssEntry: RssEntry) {
-        rssEntriesAllViewModel.getEntry(rssEntry.guid)?.let {
-            rssEntry.read = it.read
-            rssEntry.favourite = it.favourite
-        }
-    }
-
-    private fun runFullRssEntryDetailsActivity(rssEntry: RssEntry) {
-        val intent = Intent(this, RssEntryDetailsActivity::class.java).apply {
-            putExtra(INTENT_DATA_GUID, rssEntry.guid)
-            putExtra(INTENT_DATA_TITLE, rssEntry.title)
-            putExtra(INTENT_DATA_LINK, rssEntry.link)
-            putExtra(INTENT_DATA_DESCRIPTION, rssEntry.description)
-            putExtra(INTENT_DATA_DATE, rssEntry.date)
-            putExtra(INTENT_DATA_FAVOURITE, rssEntry.favourite)
-        }
-        IMAGE_TO_SHOW = rssEntry.image
-        showRssEntryDetailsActivityResult.launch(intent)
+    private fun launchFullRssEntryDetailsActivity(rssEntry: RssEntry) {
+        RSS_ENTRY_TO_SHOW = rssEntry
+        showRssEntryDetailsActivityResult.launch(Intent(this, RssEntryDetailsActivity::class.java))
+        markAsRead(rssEntry)
     }
 
     private fun toggleFavouriteOnRssEntry(rssEntry: RssEntry) {
@@ -254,10 +283,10 @@ class MainActivity : CommonActivity() {
             .setMessage(popupMessage)
             .setCancelable(false)
             .setPositiveButton(getString(yes_label)) { _, _ ->
-                updateEntries(rssEntry.guid, newFavouriteValue, false)
+                toggleFavourite(rssEntry)
                 val snackMessage = if (newFavouriteValue) entry_added_to_favourites else entry_removed_from_favourites
                 showSnackbar(snackMessage).setAction(getString(undo_favouriting)) {
-                    updateEntries(rssEntry.guid, !newFavouriteValue, false)
+                    toggleFavourite(rssEntry)
                 }
             }
             .setNegativeButton(getString(no_label)) { dialog, _ -> dialog.dismiss() }
@@ -265,22 +294,36 @@ class MainActivity : CommonActivity() {
             .show()
     }
 
-    private fun handleRssEntryDetailsResponse(activityResult: ActivityResult) {
-        activityResult.data?.apply {
-            val guid = getStringExtra(INTENT_DATA_GUID)
-            val favourite = getBooleanExtra(INTENT_DATA_FAVOURITE, false)
-            updateEntries(guid, favourite)
+    private fun handleRssEntryDetailsResponse() {
+        rssEntriesAllViewModel.refreshEntries()
+        toggleFavouriteInViewModel(RSS_ENTRY_TO_SHOW!!)
+    }
+
+    private fun markAsRead(rssEntry: RssEntry) {
+        rssEntry.read = true
+        rssEntriesAllViewModel.refreshEntries()
+        if (rssEntry.favourite) {
+            rssEntriesFavouritesViewModel.refreshEntries()
+        }
+        addToFirestore(rssEntry)
+    }
+
+    private fun toggleFavourite(rssEntry: RssEntry) {
+        rssEntry.favourite = !rssEntry.favourite
+        rssEntriesAllViewModel.refreshEntries()
+        toggleFavouriteInViewModel(rssEntry)
+        if (!rssEntry.read && !rssEntry.favourite) {
+            removeFromFirestore(rssEntry)
+        } else {
+            addToFirestore(rssEntry)
         }
     }
 
-    private fun updateEntries(guid: String?, favourite: Boolean, markAsRead: Boolean = true) {
-        val modifiedEntry = rssEntriesAllViewModel.updateEntry(guid, favourite, markAsRead)
-        val modifiedEntryFav = rssEntriesFavouritesViewModel.updateEntry(guid, favourite, modifiedEntry, markAsRead)
-        thread {
-            if (markAsRead) {
-                modifiedEntry?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
-                modifiedEntryFav?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
-            }
+    private fun toggleFavouriteInViewModel(rssEntry: RssEntry) {
+        if (rssEntry.favourite) {
+            rssEntriesFavouritesViewModel.addEntry(rssEntry)
+        } else {
+            rssEntriesFavouritesViewModel.removeEntry(rssEntry)
         }
     }
 
@@ -315,4 +358,4 @@ class MainActivity : CommonActivity() {
     }
 }
 
-private fun String.toEntity(): ReadRssGuid = ReadRssGuid(this)
+private fun String?.isNotBlankNorNull(): Boolean = this?.isNotBlank() ?: false
