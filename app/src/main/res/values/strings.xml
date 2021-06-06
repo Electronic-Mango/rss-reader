@@ -17,10 +17,11 @@
     <string name="from_poland_label">z Polski</string>
     <string name="international_label">międzynarodowych</string>
     <string name="no_location_data">Brak danych lokalizacji</string>
-    <string name="loading_international_news_tail_label">, ładowanie wiadomości międzynarodowych…</string>
-    <string name="loading_news_front_label">Ładowanie wiadomości</string>
-    <string name="loading_news_tail_label">…</string>
+    <string name="loading_international_news_tail_label">%s, ładowanie wiadomości międzynarodowych…</string>
+    <string name="loading_news_label">Ładowanie wiadomości %s…</string>
     <string name="refresh_rss_entries">Odśwież</string>
+    <string name="logout">Wyloguj się</string>
+    <string name="logout_message">Czy chcesz wylogować użytkownika\n%s?</string>
 
     <string name="title_activity_rss_entry_details">Szczegóły wydarzenia</string>
     <string name="share_rss_entry">Udostępnij wpis</string>

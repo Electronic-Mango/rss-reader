@@ -38,6 +38,8 @@ import prm.project2.Common.INTENT_DATA_GUID
 import prm.project2.Common.INTENT_DATA_LINK
 import prm.project2.Common.INTENT_DATA_TITLE
 import prm.project2.Common.POLAND_COUNTRY_CODE
+import prm.project2.FirebaseCommon.firebaseAuth
+import prm.project2.FirebaseCommon.firebaseUser
 import prm.project2.R
 import prm.project2.R.string.*
 import prm.project2.database.ReadRssGuid
@@ -46,6 +48,7 @@ import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.parseRssStream
 import prm.project2.ui.CommonActivity
+import prm.project2.ui.login.LoginActivity
 import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
 import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesViewModel
 import prm.project2.ui.rssentrydetails.RssEntryDetailsActivity
@@ -98,7 +101,14 @@ class MainActivity : CommonActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.refresh -> checkLocationPermissionAndCurrentLocation()
+            R.id.refresh -> {
+                checkLocationPermissionAndCurrentLocation()
+                true
+            }
+            R.id.account_logout -> {
+                signOutAndSwitchToLoginActivity()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -119,14 +129,13 @@ class MainActivity : CommonActivity() {
         }
     }
 
-    private fun checkLocationPermissionAndCurrentLocation(): Boolean {
+    private fun checkLocationPermissionAndCurrentLocation() {
         showIndefiniteSnackbar(establishing_user_location)
         if (!checkPermissionsGranted(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)) {
             requestPermissions(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), LOCATION_REQUEST_ID)
         } else {
             checkCurrentLocation()
         }
-        return true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -175,14 +184,12 @@ class MainActivity : CommonActivity() {
         } else {
             val rssLink = if (countryCode == POLAND_COUNTRY_CODE) RSS_LINK_POLAND else RSS_LINK_INTERNATIONAL
             val loadingMessage = if (rssLink == RSS_LINK_POLAND) from_poland_label else international_label
-            val loadingRssMessage = "${getString(loading_news_front_label)} ${getString(loadingMessage)}" +
-                    getString(loading_news_tail_label)
-            loadRss(rssLink, loadingRssMessage)
+            loadRss(rssLink, getString(loading_news_label, getString(loadingMessage)))
         }
     }
 
     private fun loadRssWithoutLocationData(message: String = getString(no_location_data)) {
-        loadRss(RSS_LINK_INTERNATIONAL, message + getString(loading_international_news_tail_label))
+        loadRss(RSS_LINK_INTERNATIONAL, getString(loading_international_news_tail_label, message))
     }
 
     private fun loadRss(rssLink: String, message: String) {
@@ -291,6 +298,20 @@ class MainActivity : CommonActivity() {
     private fun getCountryCodeFromLocation(location: Location): String? {
         return Geocoder(this, Locale.getDefault()).getFromLocation(location.latitude, location.longitude, 1)
             .firstOrNull()?.countryCode
+    }
+
+    private fun signOutAndSwitchToLoginActivity() {
+        AlertDialog.Builder(this)
+            .setMessage(getString(logout_message, firebaseUser!!.displayName ?: firebaseUser!!.email))
+            .setCancelable(false)
+            .setPositiveButton(getString(yes_label)) { _, _ ->
+                firebaseAuth.signOut()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
+            .setNegativeButton(getString(no_label)) { dialog, _ -> dialog.dismiss() }
+            .create()
+            .show()
     }
 }
 
