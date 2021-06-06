@@ -5,11 +5,11 @@
     <item
         android:id="@+id/favourite"
         android:icon="@drawable/ic_favorite_border"
-        android:title="Ulubione"
+        android:title="@string/favourite_entry_details"
         app:showAsAction="always" />
     <item
         android:id="@+id/share"
         android:icon="@drawable/ic_share"
-        android:title="Udostępnij"
-        app:showAsAction="always" />
+        android:title="@string/share_entry"
+        app:showAsAction="ifRoom" />
 </menu>

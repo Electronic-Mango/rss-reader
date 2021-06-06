@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fragmentLoginOrSignup">
+
+    <fragment
+        android:id="@+id/fragmentLoginOrSignup"
+        android:name="prm.project2.ui.login.FragmentLoginOrSignup"
+        android:label="@string/title_activity_login"
+        tools:layout="@layout/fragment_login_or_signup">
+        <action
+            android:id="@+id/move_to_login"
+            app:destination="@id/fragmentLogin" />
+        <action
+            android:id="@+id/move_to_signup"
+            app:destination="@id/fragmentSignup" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragmentLogin"
+        android:name="prm.project2.ui.login.FragmentLogin"
+        android:label="@string/action_sign_in_via_email"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/login_to_main"
+            app:destination="@id/fragmentLoginOrSignup" />
+    </fragment>
+    <fragment
+        android:id="@+id/fragmentSignup"
+        android:name="prm.project2.ui.login.FragmentSignup"
+        android:label="@string/action_sign_up"
+        tools:layout="@layout/fragment_signup">
+        <action
+            android:id="@+id/signup_to_main"
+            app:destination="@id/fragmentLoginOrSignup" />
+        <action
+            android:id="@+id/from_signup_to_login"
+            app:destination="@id/fragmentLogin"
+            app:launchSingleTop="true" />
+    </fragment>
+</navigation>

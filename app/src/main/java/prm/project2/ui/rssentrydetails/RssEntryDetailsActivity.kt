@@ -5,10 +5,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
+import android.view.View
 import androidx.core.content.res.ResourcesCompat
-import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
 import prm.project2.Common.INTENT_DATA_DESCRIPTION
@@ -17,21 +15,25 @@ import prm.project2.Common.INTENT_DATA_GUID
 import prm.project2.Common.INTENT_DATA_LINK
 import prm.project2.Common.INTENT_DATA_TITLE
 import prm.project2.R
+import prm.project2.R.string.*
 import prm.project2.databinding.ActivityRssEntryDetailsBinding
 import prm.project2.rssentries.RssEntry
+import prm.project2.ui.CommonActivity
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")
 
-class RssEntryDetailsActivity : AppCompatActivity() {
+class RssEntryDetailsActivity : CommonActivity() {
 
-    private val binding by lazy { ActivityRssEntryDetailsBinding.inflate(layoutInflater) }
+    private lateinit var binding: ActivityRssEntryDetailsBinding
     private lateinit var rssEntry: RssEntry
+    override val snackbarView: View
+        get() = binding.rssEntryDetailsContent.root
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+        binding = ActivityRssEntryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbarRrsEntryDetails)
@@ -81,7 +83,7 @@ class RssEntryDetailsActivity : AppCompatActivity() {
             putExtra(Intent.EXTRA_TEXT, "${rssEntry.title}: ${rssEntry.link}")
             type = "text/plain"
         }.let {
-            Intent.createChooser(it, "Udostępnij wpis")
+            Intent.createChooser(it, getString(share_rss_entry))
         }
         startActivity(shareIntent)
         return true
@@ -90,12 +92,11 @@ class RssEntryDetailsActivity : AppCompatActivity() {
     private fun switchFavourite(item: MenuItem): Boolean {
         rssEntry.favourite = !rssEntry.favourite
         setFavouriteIcon(item)
-        val snackMessage = if (rssEntry.favourite) "Wpis dodany do ulubionych..." else "Wpis usunięty z ulubionych..."
-        Snackbar.make(binding.rssEntryDetailsContent.root, snackMessage, LENGTH_LONG)
-            .setAction("Cofnij") {
-                rssEntry.favourite = !rssEntry.favourite
-                setFavouriteIcon(item)
-            }.show()
+        val snackMessage = if (rssEntry.favourite) entry_added_to_favourites else entry_removed_from_favourites
+        showSnackbar(snackMessage).setAction(getString(undo_favouriting)) {
+            rssEntry.favourite = !rssEntry.favourite
+            setFavouriteIcon(item)
+        }
         return true
     }
 

@@ -19,13 +19,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
-import com.google.android.gms.auth.api.Auth
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.GooglePlayServicesUtil
@@ -33,8 +29,6 @@ import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.material.snackbar.BaseTransientBottomBar.Behavior
-import com.google.android.material.snackbar.Snackbar
 import prm.project2.Common.DB_NAME
 import prm.project2.Common.IMAGE_TO_SHOW
 import prm.project2.Common.INTENT_DATA_DATE
@@ -45,13 +39,13 @@ import prm.project2.Common.INTENT_DATA_LINK
 import prm.project2.Common.INTENT_DATA_TITLE
 import prm.project2.Common.POLAND_COUNTRY_CODE
 import prm.project2.R
+import prm.project2.R.string.*
 import prm.project2.database.ReadRssGuid
 import prm.project2.database.ReadRssGuidDatabase
 import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.parseRssStream
-import prm.project2.ui.FirebaseUtils.firebaseAuth
-import prm.project2.ui.login.LoginActivity
+import prm.project2.ui.CommonActivity
 import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
 import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesViewModel
 import prm.project2.ui.rssentrydetails.RssEntryDetailsActivity
@@ -59,7 +53,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.Locale
+import java.util.*
 import java.util.stream.Collectors.toList
 import kotlin.concurrent.thread
 
@@ -67,33 +61,22 @@ private const val RSS_LINK_POLAND = "https://www.polsatnews.pl/rss/polska.xml"
 private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.xml"
 private const val LOCATION_REQUEST_ID = 100
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : CommonActivity() {
 
     private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()
     private val rssEntriesFavouritesViewModel: RssEntriesFavouritesViewModel by viewModels()
-    private val showRssEntryDetailsActivityResult = registerForActivityResult(StartActivityForResult()) {
-        handleRssEntryDetailsResponse(it)
-    }
-    private val loginActivityResult = registerForActivityResult(StartActivityForResult()) {
-        if (it.resultCode == RESULT_CANCELED) {
-            finish()
-        }
-        // TODO: Consider some kind of response for login, perhaps small UI indication + logout possibility?
-    }
     private val locationClient by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private val locationCancellationToken by lazy { CancellationTokenSource().token }
     private val database by lazy { Room.databaseBuilder(this, ReadRssGuidDatabase::class.java, DB_NAME).build() }
-    private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var showRssEntryDetailsActivityResult: ActivityResultLauncher<Intent>
+    override val snackbarView: View
+        get() = binding.viewPager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(R.layout.activity_main)
-
-        firebaseAuth.signOut()
-
-        if (firebaseAuth.currentUser == null) {
-            Intent(this, LoginActivity::class.java).let { loginActivityResult.launch(it) }
-        }
 
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
@@ -105,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { runFullRssEntryDetailsActivity(it) })
         rssEntriesAllViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
         rssEntriesFavouritesViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteOnRssEntry(it) })
+        showRssEntryDetailsActivityResult = registerForActivityResult { handleRssEntryDetailsResponse(it) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -136,7 +120,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkLocationPermissionAndCurrentLocation(): Boolean {
-        showIndefiniteSnackbar(binding.viewPager, "Określanie lokalizacji...")
+        showIndefiniteSnackbar(establishing_user_location)
         if (!checkPermissionsGranted(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)) {
             requestPermissions(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), LOCATION_REQUEST_ID)
         } else {
@@ -156,7 +140,7 @@ class MainActivity : AppCompatActivity() {
         if (checkLocationRequestResults(permissions, grantResults)) {
             checkCurrentLocation()
         } else {
-            loadRssWithoutLocationData("Brak dostępu do lokalizacji")
+            loadRssWithoutLocationData(getString(no_access_to_location_data))
         }
     }
 
@@ -165,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         if (isLocationEnabled()) {
             requestNewLocationData()
         } else {
-            loadRssWithoutLocationData("Lokalizacja nie jest włączona")
+            loadRssWithoutLocationData(getString(location_isnt_enabled))
         }
     }
 
@@ -187,38 +171,40 @@ class MainActivity : AppCompatActivity() {
         }
         val countryCode = getCountryCodeFromLocation(location)
         if (countryCode == null) {
-            loadRssWithoutLocationData("Lokalizacja nie mogła być określona")
+            loadRssWithoutLocationData(getString(location_couldnt_be_established))
         } else {
             val rssLink = if (countryCode == POLAND_COUNTRY_CODE) RSS_LINK_POLAND else RSS_LINK_INTERNATIONAL
-            val loadingMessage = if (rssLink == RSS_LINK_POLAND) "z Polski" else "międzynarodowych"
-            loadRss(rssLink, "Ładowanie wiadomości ${loadingMessage}...")
+            val loadingMessage = if (rssLink == RSS_LINK_POLAND) from_poland_label else international_label
+            val loadingRssMessage = "${getString(loading_news_front_label)} ${getString(loadingMessage)}" +
+                    getString(loading_news_tail_label)
+            loadRss(rssLink, loadingRssMessage)
         }
     }
 
-    private fun loadRssWithoutLocationData(message: String = "Brak danych lokalizacji") {
-        loadRss(RSS_LINK_INTERNATIONAL, "$message, ładowanie wiadomości międzynarodowych...")
+    private fun loadRssWithoutLocationData(message: String = getString(no_location_data)) {
+        loadRss(RSS_LINK_INTERNATIONAL, message + getString(loading_international_news_tail_label))
     }
 
     private fun loadRss(rssLink: String, message: String) {
-        val loadingDataSnackbar = showIndefiniteSnackbar(binding.viewPager, message)
+        val loadingDataSnackbar = showIndefiniteSnackbar(message)
         thread {
             val existingReadEntries = database.readRssGuidDao().getAll()
             val connection = URL(rssLink).openConnection() as HttpURLConnection
-            parseRssStream(connection.inputStream).stream()
+            val loadedEntries = parseRssStream(connection.inputStream).stream()
                 .filter { newEntry -> newEntry.guid.isNotBlank() && newEntry.title.isNotBlank() }
                 .peek { newEntry -> newEntry.image = loadBitmap(newEntry.imageUrl) }
                 .peek(this::markAsReadAndFavouriteIfRequired)
                 .peek { newEntry -> newEntry.read = existingReadEntries.contains(newEntry.guid.toEntity()) }
-                .collect(toList()).let { loadedEntries ->
-                    database.readRssGuidDao().deleteAll()
-                    loadedEntries.stream().filter { it.read }
-                        .map { it.guid.toEntity() }
-                        .collect(toList()).let { database.readRssGuidDao().insertAll(it) }
-                    runOnUiThread {
-                        rssEntriesAllViewModel.setEntries(loadedEntries)
-                        loadingDataSnackbar.dismiss()
-                    }
-                }
+                .collect(toList())
+            database.readRssGuidDao().deleteAll()
+            loadedEntries.stream()
+                .filter { it.read }
+                .map { it.guid.toEntity() }
+                .collect(toList()).let { database.readRssGuidDao().insertAll(it) }
+            runOnUiThread {
+                rssEntriesAllViewModel.setEntries(loadedEntries)
+                loadingDataSnackbar.dismiss()
+            }
         }
     }
 
@@ -251,18 +237,23 @@ class MainActivity : AppCompatActivity() {
             putExtra(INTENT_DATA_FAVOURITE, rssEntry.favourite)
         }
         IMAGE_TO_SHOW = rssEntry.image
-
         showRssEntryDetailsActivityResult.launch(intent)
     }
 
     private fun toggleFavouriteOnRssEntry(rssEntry: RssEntry) {
         val newFavouriteValue = !rssEntry.favourite
-        val popupMessage = if (newFavouriteValue) "Dodać wpis do ulubionych?" else "Usunąć wpis z ulubionych?"
+        val popupMessage = if (newFavouriteValue) add_entry_to_favourites else remove_entry_from_favourites
         AlertDialog.Builder(this)
             .setMessage(popupMessage)
             .setCancelable(false)
-            .setPositiveButton("Tak") { _, _ -> updateEntries(rssEntry.guid, newFavouriteValue, false) }
-            .setNegativeButton("Nie") { dialog, _ -> dialog.dismiss() }
+            .setPositiveButton(getString(yes_label)) { _, _ ->
+                updateEntries(rssEntry.guid, newFavouriteValue, false)
+                val snackMessage = if (newFavouriteValue) entry_added_to_favourites else entry_removed_from_favourites
+                showSnackbar(snackMessage).setAction(getString(undo_favouriting)) {
+                    updateEntries(rssEntry.guid, !newFavouriteValue, false)
+                }
+            }
+            .setNegativeButton(getString(no_label)) { dialog, _ -> dialog.dismiss() }
             .create()
             .show()
     }
@@ -283,15 +274,6 @@ class MainActivity : AppCompatActivity() {
                 modifiedEntry?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
                 modifiedEntryFav?.guid?.let { ReadRssGuid(it) }?.let { database.readRssGuidDao().insert(it) }
             }
-        }
-    }
-
-    private fun showIndefiniteSnackbar(view: View, message: String): Snackbar {
-        return Snackbar.make(view, message, Snackbar.LENGTH_INDEFINITE).apply {
-            behavior = object : Behavior() {
-                override fun canSwipeDismissView(child: View): Boolean = false
-            }
-            show()
         }
     }
 

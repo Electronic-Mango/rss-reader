@@ -6,5 +6,9 @@ package prm.project2.ui.login
 data class LoginFormState(
     val emailError: Int? = null,
     val passwordError: Int? = null,
-    val isDataValid: Boolean = false
-)
+    val isEmailValid: Boolean = false,
+    val isPasswordValid: Boolean = false
+) {
+    val isDataValid: Boolean
+        get() = isEmailValid && isPasswordValid
+}
