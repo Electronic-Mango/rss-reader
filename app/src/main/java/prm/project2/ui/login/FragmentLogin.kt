@@ -1,13 +1,10 @@
 package prm.project2.ui.login
 
-import android.content.Context.INPUT_METHOD_SERVICE
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
-import android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT
 import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.activityViewModels
@@ -24,7 +21,7 @@ import prm.project2.ui.main.MainActivity
 
 class FragmentLogin : AbstractFragmentUserData() {
 
-    private val loginFormViewModel: LoginFormViewModel by activityViewModels()
+    private val userdataFormViewModel: UserdataFormViewModel by activityViewModels()
     private lateinit var binding: FragmentLoginBinding
     private lateinit var email: EditText
     private lateinit var password: EditText
@@ -34,7 +31,7 @@ class FragmentLogin : AbstractFragmentUserData() {
     private lateinit var loadingSnackbar: Snackbar
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        loginFormViewModel.resetLoginData()
+        userdataFormViewModel.resetLoginData()
         binding = FragmentLoginBinding.inflate(inflater, container, false)
 
         email = binding.emailLogin
@@ -42,21 +39,23 @@ class FragmentLogin : AbstractFragmentUserData() {
         login = binding.login
         resetPassword = binding.resetPassword
         resendEmailVerification = binding.resendEmailVerification
-        resendEmailVerification.visibility = if (loginFormViewModel.justSignedIn) View.VISIBLE else View.GONE
+        resendEmailVerification.visibility = if (userdataFormViewModel.justSignedIn) View.VISIBLE else View.GONE
 
-        loginFormViewModel.loginFormState.observe(viewLifecycleOwner) {
+        userdataFormViewModel.userdataFormState.observe(viewLifecycleOwner) {
             val loginState = it ?: return@observe
             login.isEnabled = loginState.isDataValid
             resetPassword.isEnabled = loginState.isEmailValid
             resendEmailVerification.isEnabled = loginState.isDataValid
-            loginState.emailError?.let { email.error = getString(loginState.emailError) }
-            loginState.passwordError?.let { password.error = getString(loginState.passwordError) }
+            loginState.emailErrorMessage?.let { errorMessage -> email.error = getString(errorMessage) }
+            loginState.passwordErrorMessage?.let { errorMessage -> password.error = getString(errorMessage) }
         }
-        email.afterTextChanged { loginFormViewModel.loginDataChanged(email, password) }
+
+        email.afterTextChanged { userdataFormViewModel.loginDataChanged(email, password) }
         password.apply {
-            afterTextChanged { loginFormViewModel.loginDataChanged(email, password) }
+            afterTextChanged { userdataFormViewModel.loginDataChanged(email, password) }
             setOnEditorActionListener(onEditorActionListenerAction { login() })
         }
+
         login.setOnClickListener { login() }
         resetPassword.setOnClickListener { resetPassword() }
         resendEmailVerification.setOnClickListener { resendEmailVerification() }
@@ -66,7 +65,7 @@ class FragmentLogin : AbstractFragmentUserData() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingSnackbar = showIndefiniteSnackbar(info_loading_user_data, false)
+        loadingSnackbar = showUserDataLoadingSnackbar()
         email.requestFocus()
         email.showSoftKeyboard()
     }
@@ -90,7 +89,7 @@ class FragmentLogin : AbstractFragmentUserData() {
             startActivity(Intent(context, MainActivity::class.java))
             activity.finish()
         } else {
-            showSnackbar(email_not_verified).setAction(resend_verification_email_action) { sendEmailVerification() }
+            showSnackbar(email_not_verified).setAction(resend_verification_email_action) { resendEmailVerification() }
             firebaseAuth.signOut()
         }
     }
@@ -101,14 +100,13 @@ class FragmentLogin : AbstractFragmentUserData() {
 
     private fun resendEmailVerification() {
         loadingSnackbar.show()
-        firebaseAuth.signInWithEmailAndPassword(email.toText(), password.toText())
-            .addOnCompleteListener {
-                if (it.isSuccessful) {
-                    sendEmailVerification()
-                } else {
-                    handleLoginFailed()
-                }
+        firebaseAuth.signInWithEmailAndPassword(email.toText(), password.toText()).addOnCompleteListener {
+            if (it.isSuccessful) {
+                sendEmailVerification()
+            } else {
+                handleLoginFailed()
             }
+        }
     }
 
     private fun resetPassword() {
@@ -120,9 +118,5 @@ class FragmentLogin : AbstractFragmentUserData() {
                     .setAction(getString(resent_password_reset_email_action)) { resetPassword() }
             }
         }
-    }
-
-    private fun EditText.showSoftKeyboard() {
-        (context?.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(email, SHOW_IMPLICIT)
     }
 }

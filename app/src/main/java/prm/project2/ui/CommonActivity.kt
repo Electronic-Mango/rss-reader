@@ -25,10 +25,6 @@ abstract class CommonActivity : AppCompatActivity() {
         return Common.showIndefiniteSnackbar(snackbarView, message, show)
     }
 
-    protected fun showSnackbar(message: String): Snackbar {
-        return Common.showSnackbar(snackbarView, message)
-    }
-
     protected fun showSnackbar(messageId: Int): Snackbar {
         return Common.showSnackbar(snackbarView, messageId, this)
     }
@@ -39,17 +35,18 @@ abstract class CommonActivity : AppCompatActivity() {
 
     protected fun addToFirestore(rssEntry: RssEntry) {
         thread {
-            firestoreData.document(rssEntry.hash()).set(rssEntry.firebaseEntry()).addOnFailureListener {
-                showSnackbar(firestore_insert_error).setAction(getString(repeat_operation)) {
-                    addToFirestore(rssEntry)
+            firestoreData.document(rssEntry.firestoreDocumentName()).set(rssEntry.firebaseEntry())
+                .addOnFailureListener {
+                    showSnackbar(firestore_insert_error).setAction(getString(repeat_operation)) {
+                        addToFirestore(rssEntry)
+                    }
                 }
-            }
         }
     }
 
     protected fun removeFromFirestore(rssEntry: RssEntry) {
         thread {
-            firestoreData.document(rssEntry.hash()).delete().addOnFailureListener {
+            firestoreData.document(rssEntry.firestoreDocumentName()).delete().addOnFailureListener {
                 showSnackbar(firestore_remove_error).setAction(getString(repeat_operation)) {
                     removeFromFirestore(rssEntry)
                 }

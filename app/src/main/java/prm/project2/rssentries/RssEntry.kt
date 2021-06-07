@@ -47,7 +47,7 @@ data class RssEntry(
         )
     }
 
-    fun hash(): String {
+    fun firestoreDocumentName(): String {
         return "${guid.replace("/", "_")}-${hashCode()}"
     }
 
@@ -74,6 +74,6 @@ fun DocumentSnapshot.toRssEntry(): RssEntry = RssEntry(
     getString(FAVOURITE).toBoolean(), getString(READ)?.toBoolean() ?: true
 )
 
-private fun String.toLocalDateTime(): LocalDateTime = LocalDateTime.parse(this)
-
 fun List<RssEntry>.getEntry(rssEntry: RssEntry): RssEntry? = getOrNull(indexOf(rssEntry))
+
+private fun String.toLocalDateTime(): LocalDateTime = LocalDateTime.parse(this)

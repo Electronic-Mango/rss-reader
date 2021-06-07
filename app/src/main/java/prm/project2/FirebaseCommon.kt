@@ -16,11 +16,11 @@ object FirebaseCommon {
     val firebaseUser: FirebaseUser?
         get() = firebaseAuth.currentUser
 
-    val firestore: FirebaseFirestore
-        get() = FirebaseFirestore.getInstance()
+    val firebaseUsername: String?
+        get() = if (!firebaseUser?.displayName.isNullOrBlank()) firebaseUser?.displayName else firebaseUser?.email
 
     val firestoreData: CollectionReference
-        get() = firestore.collection(firebaseAuth.uid!!)
+        get() = FirebaseFirestore.getInstance().collection(firebaseAuth.uid!!)
 
     fun FirebaseAuth.signInWithEmailAndPassword(email: EditText, password: EditText): Task<AuthResult> =
         signInWithEmailAndPassword(email.toText(), password.toText())

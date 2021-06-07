@@ -3,11 +3,15 @@ package prm.project2
 import android.app.Activity
 import android.view.View
 import android.widget.EditText
-import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.BaseTransientBottomBar.Behavior
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
 import prm.project2.rssentries.RssEntry
+
+private val CANNOT_DISMISS_SNACKBAR_BEHAVIOR = object : Behavior() {
+    override fun canSwipeDismissView(child: View): Boolean = false
+}
 
 object Common {
 
@@ -17,12 +21,8 @@ object Common {
 
     fun showIndefiniteSnackbar(view: View, message: String, show: Boolean = true): Snackbar {
         return Snackbar.make(view, message, LENGTH_INDEFINITE).apply {
-            behavior = object : BaseTransientBottomBar.Behavior() {
-                override fun canSwipeDismissView(child: View): Boolean = false
-            }
-            if (show) {
-                show()
-            }
+            behavior = CANNOT_DISMISS_SNACKBAR_BEHAVIOR
+            if (show) show()
         }
     }
 

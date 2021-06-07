@@ -9,27 +9,24 @@ import prm.project2.Common.toText
 import prm.project2.R.string.invalid_email
 import prm.project2.R.string.invalid_password
 
-class LoginFormViewModel : ViewModel() {
+class UserdataFormViewModel : ViewModel() {
 
-    private val _loginForm = MutableLiveData<LoginFormState>()
-    val loginFormState: LiveData<LoginFormState> = _loginForm
+    private val _userdataForm = MutableLiveData<UserdataFormState>()
+    val userdataFormState: LiveData<UserdataFormState> = _userdataForm
     var justSignedIn: Boolean = false
         get() = field.apply { field = false }
 
     fun loginDataChanged(email: EditText, password: EditText) = loginDataChanged(email.toText(), password.toText())
 
     private fun loginDataChanged(email: String, password: String) {
-        if (!isEmailValid(email)) {
-            _loginForm.value = LoginFormState(emailError = invalid_email)
-        } else if (!isPasswordValid(password)) {
-            _loginForm.value = LoginFormState(passwordError = invalid_password, isEmailValid = true)
-        } else {
-            _loginForm.value = LoginFormState(isEmailValid = true, isPasswordValid = true)
-        }
+        val emailErrorMessage = if (!isEmailValid(email) && email.isNotEmpty()) invalid_email else null
+        val passwordErrorMessage = if (!isPasswordValid(password) && password.isNotEmpty()) invalid_password else null
+        _userdataForm.value =
+            UserdataFormState(isEmailValid(email), emailErrorMessage, isPasswordValid(password), passwordErrorMessage)
     }
 
     fun resetLoginData() {
-        _loginForm.value = LoginFormState()
+        _userdataForm.value = UserdataFormState()
     }
 
     private fun isEmailValid(email: String): Boolean {
@@ -37,6 +34,6 @@ class LoginFormViewModel : ViewModel() {
     }
 
     private fun isPasswordValid(password: String): Boolean {
-        return password.length > 5 && password.matches(Regex(".*\\d.*"))
+        return password.isNotEmpty()
     }
 }

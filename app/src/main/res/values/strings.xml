@@ -47,7 +47,7 @@
 
     <string name="google_login_failed">Błąd logowania przez Google, sprawdź połączenie z internetem.</string>
     <string name="invalid_email">Niepoprawny adres email</string>
-    <string name="invalid_password">Hasło musi składać się z 5 znaków i co najmniej jednej cyfry</string>
+    <string name="invalid_password">Podaj hasło</string>
     <string name="login_failed">Błąd logowania, zły adres email, hasło lub brak połączenia z internetem.</string>
     <string name="signup_failed">Błąd rejestracji, możliwe, że podany użytkownik już istnieje lub nie ma połączenia z internetem.</string>
     <string name="email_not_verified">Adres email nie został jeszcze zweryfikowany.</string>

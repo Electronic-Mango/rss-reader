@@ -8,11 +8,9 @@ class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
     fun addEntry(rssEntry: RssEntry) {
         if (entryExists(rssEntry)) return
         (entries.value?.toMutableList() ?: ArrayList()).apply {
-            if (!guidExists(rssEntry.guid)) {
-                add(rssEntry)
-                sortByDescending { it.date }
-                setEntries(this)
-            }
+            add(rssEntry)
+            sortByDescending { it.date }
+            setEntries(this)
         }
     }
 

@@ -15,8 +15,7 @@ import com.google.firebase.auth.AuthResult
 import prm.project2.FirebaseCommon
 import prm.project2.FirebaseCommon.createUserWithEmailAndPassword
 import prm.project2.R.id.from_signup_to_login
-import prm.project2.R.string.info_loading_user_data
-import prm.project2.R.string.signup_failed
+import prm.project2.R.string.*
 import prm.project2.databinding.FragmentSignupBinding
 
 /**
@@ -24,7 +23,7 @@ import prm.project2.databinding.FragmentSignupBinding
  */
 class FragmentSignup : AbstractFragmentUserData() {
 
-    private val loginFormViewModel: LoginFormViewModel by activityViewModels()
+    private val userdataFormViewModel: UserdataFormViewModel by activityViewModels()
     private lateinit var binding: FragmentSignupBinding
     private lateinit var email: EditText
     private lateinit var password: EditText
@@ -32,24 +31,26 @@ class FragmentSignup : AbstractFragmentUserData() {
     private lateinit var loadingSnackbar: Snackbar
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        loginFormViewModel.resetLoginData()
+        userdataFormViewModel.resetLoginData()
         binding = FragmentSignupBinding.inflate(inflater, container, false)
 
         email = binding.emailSignup
         password = binding.passwordSignup
         signup = binding.signup
 
-        loginFormViewModel.loginFormState.observe(viewLifecycleOwner) {
+        userdataFormViewModel.userdataFormState.observe(viewLifecycleOwner) {
             val loginState = it ?: return@observe
             signup.isEnabled = loginState.isDataValid
-            loginState.emailError?.let { email.error = getString(loginState.emailError) }
-            loginState.passwordError?.let { password.error = getString(loginState.passwordError) }
+            loginState.emailErrorMessage?.let { errorMessage -> email.error = getString(errorMessage) }
+            loginState.passwordErrorMessage?.let { errorMessage -> password.error = getString(errorMessage) }
         }
-        email.afterTextChanged { loginFormViewModel.loginDataChanged(email, password) }
+
+        email.afterTextChanged { userdataFormViewModel.loginDataChanged(email, password) }
         password.apply {
-            afterTextChanged { loginFormViewModel.loginDataChanged(email, password) }
+            afterTextChanged { userdataFormViewModel.loginDataChanged(email, password) }
             setOnEditorActionListener(onEditorActionListenerAction { signup() })
         }
+
         signup.setOnClickListener { signup() }
 
         return binding.root
@@ -57,7 +58,9 @@ class FragmentSignup : AbstractFragmentUserData() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadingSnackbar = showIndefiniteSnackbar(info_loading_user_data, false)
+        loadingSnackbar = showUserDataLoadingSnackbar()
+        email.requestFocus()
+        email.showSoftKeyboard()
     }
 
     private fun signup() {
@@ -69,9 +72,9 @@ class FragmentSignup : AbstractFragmentUserData() {
     private fun handleCreateUser(signInTask: Task<AuthResult>) {
         if (signInTask.isSuccessful) {
             sendEmailVerification {
-                loginFormViewModel.justSignedIn = true
+                userdataFormViewModel.justSignedIn = true
                 findNavController().navigate(from_signup_to_login)
-                loginFormViewModel.resetLoginData()
+                userdataFormViewModel.resetLoginData()
                 email.text.clear()
                 password.text.clear()
             }

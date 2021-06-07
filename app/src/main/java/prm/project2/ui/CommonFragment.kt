@@ -7,18 +7,19 @@ import android.text.TextWatcher
 import android.widget.EditText
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
 import prm.project2.Common
+import prm.project2.R.string.info_loading_user_data
 
 abstract class CommonFragment : Fragment() {
 
     protected val activity: Activity
         get() = requireActivity()
 
-    protected fun showIndefiniteSnackbar(messageId: Int, show: Boolean = true): Snackbar {
-        return Common.showIndefiniteSnackbar(requireView(), getString(messageId), show)
+    protected fun showUserDataLoadingSnackbar(): Snackbar {
+        return Common.showIndefiniteSnackbar(requireView(), getString(info_loading_user_data), false)
     }
 
     protected fun showSnackbar(messageId: Int): Snackbar {
@@ -38,6 +39,6 @@ abstract class CommonFragment : Fragment() {
     }
 
     protected fun registerForActivityResult(callback: (ActivityResult) -> Unit): ActivityResultLauncher<Intent> {
-        return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { callback(it) }
+        return registerForActivityResult(StartActivityForResult()) { callback(it) }
     }
 }

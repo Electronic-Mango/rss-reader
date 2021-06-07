@@ -65,7 +65,7 @@ private fun readEntry(parser: XmlPullParser): RssEntry {
     return RssEntry(guid, title, link, description, date, enclosure)
 }
 
-@Throws(IOException::class, XmlPullParserException::class)
+@Throws(XmlPullParserException::class, IOException::class)
 private fun readTextField(parser: XmlPullParser, tagName: String): String {
     parser.require(XmlPullParser.START_TAG, NAMESPACE, tagName)
     val title = readText(parser)
@@ -73,17 +73,8 @@ private fun readTextField(parser: XmlPullParser, tagName: String): String {
     return title
 }
 
-@Throws(IOException::class, XmlPullParserException::class)
-private fun readEnclosure(parser: XmlPullParser): String {
-    parser.require(XmlPullParser.START_TAG, NAMESPACE, "enclosure")
-    val url = parser.getAttributeValue(null, "url")
-    parser.nextTag()
-    parser.require(XmlPullParser.END_TAG, NAMESPACE, "enclosure")
-    return url
-}
 
-
-@Throws(IOException::class, XmlPullParserException::class)
+@Throws(XmlPullParserException::class, IOException::class)
 private fun readText(parser: XmlPullParser): String {
     var result = ""
     if (parser.next() == XmlPullParser.TEXT) {
@@ -91,6 +82,15 @@ private fun readText(parser: XmlPullParser): String {
         parser.nextTag()
     }
     return result
+}
+
+@Throws(XmlPullParserException::class, IOException::class)
+private fun readEnclosure(parser: XmlPullParser): String {
+    parser.require(XmlPullParser.START_TAG, NAMESPACE, "enclosure")
+    val url = parser.getAttributeValue(null, "url")
+    parser.nextTag()
+    parser.require(XmlPullParser.END_TAG, NAMESPACE, "enclosure")
+    return url
 }
 
 @Throws(XmlPullParserException::class, IOException::class)
