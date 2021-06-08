@@ -47,7 +47,7 @@ private fun readEntry(parser: XmlPullParser): RssEntry {
     var link: String? = null
     var description: String? = null
     var date: LocalDateTime? = null
-    var enclosure: String? = null
+    val enclosures: MutableList<Enclosure> = ArrayList()
     while (parser.next() != XmlPullParser.END_TAG) {
         if (parser.eventType != XmlPullParser.START_TAG) {
             continue
@@ -58,11 +58,11 @@ private fun readEntry(parser: XmlPullParser): RssEntry {
             "link" -> link = readTextField(parser, "link")
             "description" -> description = readTextField(parser, "description")
             "pubDate" -> date = LocalDateTime.parse(readTextField(parser, "pubDate"), DATE_FORMATTER)
-            "enclosure" -> enclosure = readEnclosure(parser)
+            "enclosure" -> enclosures.add(readEnclosure(parser))
             else -> skip(parser)
         }
     }
-    return RssEntry(guid, title, link, description, date, enclosure)
+    return RssEntry(guid, title, link, description, date, enclosures)
 }
 
 @Throws(XmlPullParserException::class, IOException::class)
@@ -85,12 +85,14 @@ private fun readText(parser: XmlPullParser): String {
 }
 
 @Throws(XmlPullParserException::class, IOException::class)
-private fun readEnclosure(parser: XmlPullParser): String {
+private fun readEnclosure(parser: XmlPullParser): Enclosure {
     parser.require(XmlPullParser.START_TAG, NAMESPACE, "enclosure")
-    val url = parser.getAttributeValue(null, "url")
+    val url = parser.getAttributeValue(NAMESPACE, "url")
+    val length = parser.getAttributeValue(NAMESPACE, "length").toLongOrNull()
+    val type = parser.getAttributeValue(NAMESPACE, "type")
     parser.nextTag()
     parser.require(XmlPullParser.END_TAG, NAMESPACE, "enclosure")
-    return url
+    return Enclosure(url, length, type)
 }
 
 @Throws(XmlPullParserException::class, IOException::class)

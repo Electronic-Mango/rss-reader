@@ -7,7 +7,6 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.Behavior
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 import com.google.android.material.snackbar.Snackbar.LENGTH_LONG
-import prm.project2.rssentries.RssEntry
 
 private val CANNOT_DISMISS_SNACKBAR_BEHAVIOR = object : Behavior() {
     override fun canSwipeDismissView(child: View): Boolean = false
@@ -16,8 +15,6 @@ private val CANNOT_DISMISS_SNACKBAR_BEHAVIOR = object : Behavior() {
 object Common {
 
     const val POLAND_COUNTRY_CODE = "PL"
-
-    var RSS_ENTRY_TO_SHOW: RssEntry? = null
 
     fun showIndefiniteSnackbar(view: View, message: String, show: Boolean = true): Snackbar {
         return Snackbar.make(view, message, LENGTH_INDEFINITE).apply {

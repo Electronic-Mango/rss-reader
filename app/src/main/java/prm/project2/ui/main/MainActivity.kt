@@ -6,8 +6,6 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
@@ -32,7 +30,6 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.QuerySnapshot
 import prm.project2.Common.POLAND_COUNTRY_CODE
-import prm.project2.Common.RSS_ENTRY_TO_SHOW
 import prm.project2.FirebaseCommon.firebaseAuth
 import prm.project2.FirebaseCommon.firebaseUsername
 import prm.project2.FirebaseCommon.firestoreData
@@ -47,12 +44,10 @@ import prm.project2.rssentries.parseRssStream
 import prm.project2.rssentries.toRssEntry
 import prm.project2.ui.CommonActivity
 import prm.project2.ui.login.LoginActivity
-import prm.project2.ui.main.rssentries.RssEntriesViewModel
+import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
 import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesViewModel
 import prm.project2.ui.rssentrydetails.RssEntryDetailsActivity
-import java.io.IOException
 import java.net.HttpURLConnection
-import java.net.MalformedURLException
 import java.net.URL
 import java.util.*
 import kotlin.concurrent.thread
@@ -62,12 +57,11 @@ private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.
 private const val LOCATION_REQUEST_ID = 100
 
 private const val GOOGLE_PLAY_TAG = "MAIN-ACTIVITY-GP-SECURITY"
-private const val BITMAP_LOADING_TAG = "MAIN-ACTIVITY-LOADING-IMG"
 private const val LOADING_RSS_DATA_TAG = "MAIN-ACTIVITY-LOADING-RSS-DATA"
 
 class MainActivity : CommonActivity() {
 
-    private val rssEntriesAllViewModel: RssEntriesViewModel by viewModels()
+    private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()
     private val rssEntriesFavouritesViewModel: RssEntriesFavouritesViewModel by viewModels()
     private lateinit var locationClient: FusedLocationProviderClient
     private lateinit var locationCancellationToken: CancellationToken
@@ -94,7 +88,7 @@ class MainActivity : CommonActivity() {
         rssEntriesFavouritesViewModel.entryToDisplay.observe(this, { launchFullRssEntryDetailsActivity(it) })
         rssEntriesAllViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteRssEntry(it) })
         rssEntriesFavouritesViewModel.entryToToggleFavourite.observe(this, { toggleFavouriteRssEntry(it) })
-        showRssEntryDetailsActivityResult = registerForActivityResult { handleRssEntryDetailsResponse() }
+        showRssEntryDetailsActivityResult = registerForActivityResult { handleRssEntryDetailsResponse(it.data) }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -249,7 +243,7 @@ class MainActivity : CommonActivity() {
         val newEntries = parseRssStream(connection.inputStream).asSequence()
             .filter { it.guid.isNotBlank() }
             .filter { it.title.isNotBlankNorNull() }
-            .onEach { it.image = loadBitmap(it.imageUrl) }
+            .onEach { it.image = loadBitmap(it.getSmallestImageUrl()) }
             .onEach {
                 firebaseEntries.getEntry(it)?.let { firebaseEntry ->
                     it.read = firebaseEntry.read
@@ -260,7 +254,7 @@ class MainActivity : CommonActivity() {
             .toList()
         val favouriteFirebaseEntries = firebaseEntries.asSequence()
             .filter { it.favourite }
-            .onEach { it.image = loadBitmap(it.imageUrl) }
+            .onEach { it.image = loadBitmap(it.getSmallestImageUrl()) }
             .sortedByDescending { it.date }
             .toList()
         runOnUiThread {
@@ -275,31 +269,8 @@ class MainActivity : CommonActivity() {
 
     }
 
-    private fun loadBitmap(url: String?): Bitmap? = url?.let {
-        try {
-            URL(url).openStream().let { BitmapFactory.decodeStream(it) }
-        } catch (exception: MalformedURLException) {
-            Log.e(BITMAP_LOADING_TAG, "Malformed URL $url!")
-            null
-        } catch (exception: IOException) {
-            Log.e(BITMAP_LOADING_TAG, "I/O Exception when loading an image from $url!")
-            null
-        }
-    }
-
     private fun launchFullRssEntryDetailsActivity(rssEntry: RssEntry) {
-        RSS_ENTRY_TO_SHOW = rssEntry
-        showRssEntryDetailsActivityResult.launch(Intent(this, RssEntryDetailsActivity::class.java))
-        markAsRead(rssEntry)
-    }
-
-    private fun markAsRead(rssEntry: RssEntry) {
-        rssEntry.read = true
-        rssEntriesAllViewModel.refreshEntries()
-        if (rssEntry.favourite) {
-            rssEntriesFavouritesViewModel.refreshEntries()
-        }
-        addToFirestore(rssEntry)
+        showRssEntryDetailsActivityResult.launch(rssEntry.toIntent(this, RssEntryDetailsActivity::class))
     }
 
     private fun toggleFavouriteRssEntry(rssEntry: RssEntry) {
@@ -320,9 +291,9 @@ class MainActivity : CommonActivity() {
             .show()
     }
 
-    private fun handleRssEntryDetailsResponse() {
-        rssEntriesAllViewModel.refreshEntries()
-        toggleFavouriteInViewModel(RSS_ENTRY_TO_SHOW!!)
+    private fun handleRssEntryDetailsResponse(data: Intent?) {
+        val existingRssEntry = rssEntriesAllViewModel.updateEntryFromIntent(data)
+        rssEntriesFavouritesViewModel.updateEntryFromIntent(data, existingRssEntry)
     }
 
     private fun toggleFavourite(rssEntry: RssEntry) {

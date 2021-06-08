@@ -30,12 +30,12 @@
         android:id="@+id/favouriteMark"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/rss_entry_image_description"
         android:translationX="4dp"
         android:translationY="-4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_bookmark"
-        android:contentDescription="@string/rss_entry_image_description" />
+        app:srcCompat="@drawable/ic_bookmark" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintLayout2"
@@ -61,7 +61,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="false"
-                android:text="TITLE"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
@@ -75,7 +74,6 @@
                 android:ellipsize="end"
                 android:lines="3"
                 android:singleLine="false"
-                android:text="SHORT-DESCRIPTION"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/rssEntryTitle" />
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -84,11 +82,11 @@
             android:id="@+id/rssEntryImage"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:contentDescription="@string/rss_entry_image"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_launcher_background"
-            android:contentDescription="@string/rss_entry_image" />
+            app:srcCompat="@drawable/ic_no_image" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -1,54 +1,89 @@
 package prm.project2.rssentries
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import com.google.firebase.firestore.DocumentSnapshot
+import java.io.Serializable
 import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
+import kotlin.reflect.KClass
 
-private const val GUID = "GUID"
-private const val TITLE = "TITLE"
-private const val LINK = "LINK"
-private const val DESCRIPTION = "DESCRIPTION"
-private const val DATE = "DATE"
-private const val IMAGE_URL = "IMAGE_URL"
-private const val FAVOURITE = "FAVOURITE"
-private const val READ = "READ"
+const val GUID = "GUID"
+const val TITLE = "TITLE"
+const val LINK = "LINK"
+const val DESCRIPTION = "DESCRIPTION"
+const val DATE = "DATE"
+const val ENCLOSURES = "ENCLOSURES"
+const val URL = "URL"
+const val LENGTH = "LENGTH"
+const val TYPE = "TYPE"
+const val FAVOURITE = "FAVOURITE"
+const val READ = "READ"
 
-data class RssEntry(
+data class Enclosure(
+    val url: String,
+    val length: Long?,
+    val type: String
+) : Serializable {
+    fun firestoreEntity(): HashMap<String, Any?> = hashMapOf(URL to url, LENGTH to length, TYPE to type)
+}
+
+class RssEntry(
     val guid: String,
     val title: String?,
     val link: String?,
     val description: String?,
     val date: LocalDateTime?,
-    val imageUrl: String?,
+    private val enclosures: List<Enclosure> = ArrayList(),
     var image: Bitmap? = null,
     var favourite: Boolean = false,
     var read: Boolean = false
 ) {
-    fun firebaseEntry(): HashMap<String, String?> {
-        return if (favourite) fullEntry() else guidEntry()
+    fun getSmallestImageUrl(): String? {
+        return enclosures.minByOrNull { it.length ?: 0 }?.url
     }
 
-    private fun fullEntry(): HashMap<String, String?> {
+    fun getLargestImageUrl(): String? {
+        return enclosures.maxByOrNull { it.length ?: 0 }?.url
+    }
+
+    fun firestoreDocumentName(): String {
+        return "${guid.replace("/", "_")}-${hashCode()}"
+    }
+
+    fun firestoreEntry(): HashMap<String, Any?> {
+        return if (favourite) fullFirestoreEntry() else guidFirestoreEntry()
+    }
+
+    private fun fullFirestoreEntry(): HashMap<String, Any?> {
         return hashMapOf(
             GUID to guid,
             TITLE to title,
             LINK to link,
             DESCRIPTION to description,
             DATE to date?.toString(),
-            IMAGE_URL to imageUrl,
-            FAVOURITE to favourite.toString(),
-            READ to read.toString()
+            ENCLOSURES to enclosures.map { it.firestoreEntity() },
+            FAVOURITE to favourite,
+            READ to read
         )
     }
 
-    private fun guidEntry(): HashMap<String, String?> {
+    private fun guidFirestoreEntry(): HashMap<String, Any?> {
         return hashMapOf(
             GUID to guid
         )
     }
 
-    fun firestoreDocumentName(): String {
-        return "${guid.replace("/", "_")}-${hashCode()}"
+    fun toIntent(packageContext: Context, cls: KClass<*>): Intent = Intent(packageContext, cls.java).apply {
+        putExtra(GUID, guid)
+        putExtra(TITLE, title)
+        putExtra(LINK, link)
+        putExtra(DESCRIPTION, description)
+        putExtra(DATE, date)
+        putExtra(ENCLOSURES, enclosures.toTypedArray())
+        putExtra(FAVOURITE, favourite)
+        putExtra(READ, read)
     }
 
     fun equals(guid: String): Boolean {
@@ -68,12 +103,38 @@ data class RssEntry(
     }
 }
 
-fun DocumentSnapshot.toRssEntry(): RssEntry = RssEntry(
-    getString(GUID)!!, getString(TITLE), getString(LINK),
-    getString(DESCRIPTION), getString(DATE)?.toLocalDateTime(), getString(IMAGE_URL), null,
-    getString(FAVOURITE).toBoolean(), getString(READ)?.toBoolean() ?: true
-)
+fun DocumentSnapshot.toRssEntry(): RssEntry {
+    val enclosuresEntries = get(ENCLOSURES) as List<*>? ?: ArrayList<Enclosure>()
+    val enclosures = enclosuresEntries
+        .filterIsInstance<HashMap<*, *>>()
+        .map { Enclosure(it[URL] as String, it[LENGTH] as Long?, it[TYPE] as String) }
+    return RssEntry(
+        getString(GUID)!!, getString(TITLE), getString(LINK), getString(DESCRIPTION), getLocalDateTime(DATE),
+        enclosures, favourite = getBoolean(FAVOURITE) ?: false, read = getBoolean(READ) ?: true
+    )
+}
+
+private fun DocumentSnapshot.getLocalDateTime(field: String): LocalDateTime? = getString(field)?.toLocalDateTime()
+
+private fun String.toLocalDateTime(): LocalDateTime? = tryParse(this)
+
+private fun tryParse(text: String): LocalDateTime? {
+    return try {
+        LocalDateTime.parse(text)
+    } catch (_: DateTimeParseException) {
+        null
+    }
+}
 
 fun List<RssEntry>.getEntry(rssEntry: RssEntry): RssEntry? = getOrNull(indexOf(rssEntry))
 
-private fun String.toLocalDateTime(): LocalDateTime = LocalDateTime.parse(this)
+fun Intent.toRssEntry(read: Boolean = true): RssEntry? {
+    val guid = getStringExtra(GUID) ?: return null
+    val title = getStringExtra(TITLE)
+    val link = getStringExtra(LINK)
+    val description = getStringExtra(DESCRIPTION)
+    val date = getSerializableExtra(DATE) as LocalDateTime
+    val favourite = getBooleanExtra(FAVOURITE, false)
+    val enclosures = (getSerializableExtra(ENCLOSURES) as Array<*>).filterIsInstance<Enclosure>().toList()
+    return RssEntry(guid, title, link, description, date, enclosures, favourite = favourite, read = read)
+}

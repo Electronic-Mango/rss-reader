@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import prm.project2.rssentries.RssEntry
 
-open class RssEntriesViewModel : ViewModel() {
+abstract class RssEntriesViewModel : ViewModel() {
     private val mutableEntries = MutableLiveData<List<RssEntry>>().apply { value = ArrayList() }
     val entries: LiveData<List<RssEntry>> = mutableEntries
 
@@ -22,6 +22,8 @@ open class RssEntriesViewModel : ViewModel() {
     fun showEntry(entry: RssEntry) {
         mutableEntryToDisplay.value = entry
     }
+
+    protected fun getEntry(guid: String): RssEntry? = entries.value?.firstOrNull { it.guid == guid }
 
     protected fun entryExists(rssEntry: RssEntry): Boolean = entries.value?.contains(rssEntry) ?: false
 

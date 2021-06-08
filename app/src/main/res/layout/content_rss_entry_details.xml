@@ -32,7 +32,6 @@
                     android:layout_height="wrap_content"
                     android:maxWidth="390dp"
                     android:singleLine="false"
-                    android:text="TITLE"
                     android:textSize="24sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
@@ -44,32 +43,32 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:maxWidth="390dp"
-                    android:text="DATE"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/rssEntryDetailsTitle" />
 
                 <ImageView
                     android:id="@+id/rss_entry_details_image"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="16dp"
+                    android:contentDescription="@string/rss_entry_image"
+                    app:layout_constraintBottom_toTopOf="@+id/divider"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/rssEntryDetailsDate"
-                    app:srcCompat="@drawable/ic_launcher_background"
-                    android:contentDescription="@string/rss_entry_image" />
+                    app:srcCompat="@drawable/ic_no_image" />
 
                 <TextView
                     android:id="@+id/rssEntryDetailsDescription"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="16dp"
                     android:maxWidth="390dp"
                     android:singleLine="false"
-                    android:text="DESCRIPTION"
                     android:textSize="16sp"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/rss_entry_details_image" />
+                    app:layout_constraintTop_toBottomOf="@+id/divider" />
 
                 <TextView
                     android:id="@+id/rssEntryDetailsLink"
@@ -79,9 +78,19 @@
                     android:autoLink="all"
                     android:maxWidth="390dp"
                     android:singleLine="false"
-                    android:text="LINK"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/rssEntryDetailsDescription" />
+
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="256dp"
+                    android:background="?android:attr/listDivider"
+                    android:visibility="invisible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/rssEntryDetailsDate" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
