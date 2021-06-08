@@ -5,7 +5,7 @@ import android.widget.EditText
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import prm.project2.Common.toText
+import prm.project2.common.Common.toText
 import prm.project2.R.string.invalid_email
 import prm.project2.R.string.invalid_password
 

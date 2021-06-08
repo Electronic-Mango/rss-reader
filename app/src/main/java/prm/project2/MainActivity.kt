@@ -1,4 +1,4 @@
-package prm.project2.ui.main
+package prm.project2
 
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -29,11 +29,10 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.QuerySnapshot
-import prm.project2.Common.POLAND_COUNTRY_CODE
-import prm.project2.CommonFirebase.firebaseAuth
-import prm.project2.CommonFirebase.firebaseUsername
-import prm.project2.CommonFirebase.firestoreData
-import prm.project2.R
+import prm.project2.common.Common.POLAND_COUNTRY_CODE
+import prm.project2.common.CommonFirebase.firebaseAuth
+import prm.project2.common.CommonFirebase.firebaseUsername
+import prm.project2.common.CommonFirebase.firestoreData
 import prm.project2.R.id.account_logout
 import prm.project2.R.id.refresh
 import prm.project2.R.string.*
@@ -42,11 +41,9 @@ import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.getEntry
 import prm.project2.rssentries.parseRssStream
 import prm.project2.rssentries.toRssEntry
-import prm.project2.ui.CommonActivity
-import prm.project2.ui.login.LoginActivity
-import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllViewModel
-import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesViewModel
-import prm.project2.ui.rssentrydetails.RssEntryDetailsActivity
+import prm.project2.ui.main.SectionsPagerAdapter
+import prm.project2.ui.main.rssentriesall.RssEntriesAllViewModel
+import prm.project2.ui.main.rssentriesfavourites.RssEntriesFavouritesViewModel
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
@@ -73,7 +70,7 @@ class MainActivity : CommonActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
 

@@ -1,4 +1,4 @@
-package prm.project2.ui.main.rssentries
+package prm.project2.ui.main
 
 import android.os.Bundle
 import android.view.LayoutInflater

@@ -1,4 +1,4 @@
-package prm.project2.ui.login
+package prm.project2
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,11 +7,9 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-import prm.project2.CommonFirebase.firebaseUser
+import prm.project2.common.CommonFirebase.firebaseUser
 import prm.project2.R.id.nav_host_fragment_content_login
 import prm.project2.databinding.ActivityLoginBinding
-import prm.project2.ui.CommonActivity
-import prm.project2.ui.main.MainActivity
 
 class LoginActivity : CommonActivity() {
 

@@ -12,8 +12,8 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.AuthResult
-import prm.project2.CommonFirebase
-import prm.project2.CommonFirebase.createUserWithEmailAndPassword
+import prm.project2.common.CommonFirebase
+import prm.project2.common.CommonFirebase.createUserWithEmailAndPassword
 import prm.project2.R.id.from_signup_to_login
 import prm.project2.R.string.*
 import prm.project2.databinding.FragmentSignupBinding

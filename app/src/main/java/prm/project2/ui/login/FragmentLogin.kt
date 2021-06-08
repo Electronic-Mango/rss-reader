@@ -11,13 +11,13 @@ import androidx.fragment.app.activityViewModels
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.AuthResult
-import prm.project2.Common.toText
-import prm.project2.CommonFirebase.firebaseAuth
-import prm.project2.CommonFirebase.firebaseUser
-import prm.project2.CommonFirebase.signInWithEmailAndPassword
+import prm.project2.common.Common.toText
+import prm.project2.common.CommonFirebase.firebaseAuth
+import prm.project2.common.CommonFirebase.firebaseUser
+import prm.project2.common.CommonFirebase.signInWithEmailAndPassword
 import prm.project2.R.string.*
 import prm.project2.databinding.FragmentLoginBinding
-import prm.project2.ui.main.MainActivity
+import prm.project2.MainActivity
 
 class FragmentLogin : FragmentUserData() {
 

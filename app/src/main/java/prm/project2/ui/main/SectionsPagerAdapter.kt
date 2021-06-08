@@ -6,8 +6,8 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import prm.project2.R.string.tab_title_all
 import prm.project2.R.string.tab_title_favourites
-import prm.project2.ui.main.rssentries.rssentriesall.RssEntriesAllFragment
-import prm.project2.ui.main.rssentries.rssentriesfavourites.RssEntriesFavouritesFragment
+import prm.project2.ui.main.rssentriesall.RssEntriesAllFragment
+import prm.project2.ui.main.rssentriesfavourites.RssEntriesFavouritesFragment
 
 class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) :
     FragmentStatePagerAdapter(fragmentManager) {

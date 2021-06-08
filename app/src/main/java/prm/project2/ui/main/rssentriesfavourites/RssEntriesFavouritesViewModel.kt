@@ -1,10 +1,10 @@
-package prm.project2.ui.main.rssentries.rssentriesfavourites
+package prm.project2.ui.main.rssentriesfavourites
 
 import android.content.Intent
 import prm.project2.rssentries.FAVOURITE
 import prm.project2.rssentries.GUID
 import prm.project2.rssentries.RssEntry
-import prm.project2.ui.main.rssentries.RssEntriesViewModel
+import prm.project2.ui.main.RssEntriesViewModel
 
 class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
 

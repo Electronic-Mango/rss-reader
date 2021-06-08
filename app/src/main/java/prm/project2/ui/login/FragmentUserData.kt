@@ -6,7 +6,7 @@ import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT
 import android.widget.EditText
 import android.widget.TextView.OnEditorActionListener
-import prm.project2.CommonFirebase
+import prm.project2.common.CommonFirebase
 import prm.project2.R.string.email_sending_error
 import prm.project2.R.string.verify_email_popup
 import prm.project2.ui.CommonFragment

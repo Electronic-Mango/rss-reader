@@ -1,4 +1,4 @@
-package prm.project2.ui.rssentrydetails
+package prm.project2
 
 import android.R.id.home
 import android.app.Activity
@@ -7,58 +7,48 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.viewModels
 import androidx.core.content.res.ResourcesCompat
-import prm.project2.Common.loadBitmap
-import prm.project2.R
+import prm.project2.R.drawable.ic_favorite_border
+import prm.project2.R.drawable.ic_favorite_full
 import prm.project2.R.id.favourite
 import prm.project2.R.id.share
+import prm.project2.R.menu.menu_rss_entry_details
 import prm.project2.R.string.*
 import prm.project2.databinding.ActivityRssEntryDetailsBinding
 import prm.project2.rssentries.FAVOURITE
 import prm.project2.rssentries.GUID
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.toRssEntry
-import prm.project2.ui.CommonActivity
-import java.time.format.DateTimeFormatter
-import kotlin.concurrent.thread
-
-private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")
+import prm.project2.ui.rssentrydetails.RssEntryDetailsViewModel
 
 class RssEntryDetailsActivity : CommonActivity() {
 
+    private val rssEntryDetailsViewModel: RssEntryDetailsViewModel by viewModels()
     private lateinit var binding: ActivityRssEntryDetailsBinding
     private lateinit var rssEntry: RssEntry
     override val snackbarView: View
-        get() = binding.rssEntryDetailsContent.root
+        get() = binding.container
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRssEntryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(binding.toolbarRrsEntryDetails)
+        setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-
         rssEntry = intent.toRssEntry()!!
-        loadAndDisplayEntryImage()
-        binding.rssEntryDetailsContent.rssEntryDetailsTitle.text = rssEntry.title ?: ""
-        binding.rssEntryDetailsContent.rssEntryDetailsDate.text = rssEntry.date?.format(DATE_FORMATTER) ?: ""
-        binding.rssEntryDetailsContent.rssEntryDetailsDescription.text = rssEntry.description ?: ""
-        binding.rssEntryDetailsContent.rssEntryDetailsLink.text = rssEntry.link ?: ""
         addToFirestore(rssEntry)
     }
 
-    private fun loadAndDisplayEntryImage() {
-        thread {
-            loadBitmap(rssEntry.getLargestImageUrl()).let {
-                runOnUiThread { binding.rssEntryDetailsContent.rssEntryDetailsImage.setImageBitmap(it) }
-            }
-        }
+    override fun onResume() {
+        super.onResume()
+        rssEntryDetailsViewModel.setRssEntry(rssEntry)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
-        inflater.inflate(R.menu.menu_rss_entry_details, menu)
+        inflater.inflate(menu_rss_entry_details, menu)
         toggleFavouriteIcon(menu.findItem(favourite))
         return super.onCreateOptionsMenu(menu)
     }
@@ -79,6 +69,10 @@ class RssEntryDetailsActivity : CommonActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onBackPressed() {
+        finishActivity()
     }
 
     private fun shareRssEntry() {
@@ -107,7 +101,7 @@ class RssEntryDetailsActivity : CommonActivity() {
     }
 
     private fun toggleFavouriteIcon(item: MenuItem) {
-        val newIcon = if (rssEntry.favourite) R.drawable.ic_favorite_full else R.drawable.ic_favorite_border
+        val newIcon = if (rssEntry.favourite) ic_favorite_full else ic_favorite_border
         item.icon = ResourcesCompat.getDrawable(resources, newIcon, null)
     }
 

@@ -1,4 +1,4 @@
-package prm.project2.ui
+package prm.project2
 
 import android.content.Intent
 import android.view.View
@@ -7,8 +7,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import prm.project2.Common
-import prm.project2.CommonFirebase.firestoreData
+import prm.project2.common.Common
+import prm.project2.common.CommonFirebase.firestoreData
 import prm.project2.R.string.*
 import prm.project2.rssentries.RssEntry
 import kotlin.concurrent.thread

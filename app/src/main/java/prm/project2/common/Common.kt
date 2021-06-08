@@ -1,4 +1,4 @@
-package prm.project2
+package prm.project2.common
 
 import android.app.Activity
 import android.graphics.Bitmap

@@ -2,9 +2,10 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.rssentrydetails.RssEntryDetailsActivity">
+    tools:context=".RssEntryDetailsActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -12,7 +13,7 @@
         android:theme="@style/Theme.PrmProject2.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbarRrsEntryDetails"
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
@@ -20,8 +21,12 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include
-        android:id="@+id/rssEntryDetailsContent"
-        layout="@layout/content_rss_entry_details" />
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_rss_entry_details"
+        android:name="prm.project2.ui.rssentrydetails.RssEntryDetailsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:layout="@layout/fragment_rss_entry_details" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

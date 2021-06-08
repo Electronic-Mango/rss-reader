@@ -1,4 +1,4 @@
-package prm.project2.ui.main.rssentries
+package prm.project2.ui.main
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import prm.project2.rssentries.RssEntry
 
 abstract class RssEntriesViewModel : ViewModel() {
+
     private val mutableEntries = MutableLiveData<List<RssEntry>>().apply { value = ArrayList() }
     val entries: LiveData<List<RssEntry>> = mutableEntries
 

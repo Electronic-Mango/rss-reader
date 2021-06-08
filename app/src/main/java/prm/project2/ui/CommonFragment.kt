@@ -10,7 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.fragment.app.Fragment
 import com.google.android.material.snackbar.Snackbar
-import prm.project2.Common
+import prm.project2.common.Common
 import prm.project2.R.string.info_loading_user_data
 
 abstract class CommonFragment : Fragment() {
