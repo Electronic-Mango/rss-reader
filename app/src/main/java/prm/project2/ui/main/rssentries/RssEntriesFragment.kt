@@ -25,7 +25,7 @@ abstract class RssEntriesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.rssEntriesRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = RssEntriesRecyclerViewAdapter(viewModel, viewLifecycleOwner)
+            adapter = RssEntriesRecyclerViewAdapter(viewModel, viewLifecycleOwner, activity)
         }
     }
 }

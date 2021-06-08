@@ -12,8 +12,8 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.AuthResult
-import prm.project2.FirebaseCommon
-import prm.project2.FirebaseCommon.createUserWithEmailAndPassword
+import prm.project2.CommonFirebase
+import prm.project2.CommonFirebase.createUserWithEmailAndPassword
 import prm.project2.R.id.from_signup_to_login
 import prm.project2.R.string.*
 import prm.project2.databinding.FragmentSignupBinding
@@ -21,7 +21,7 @@ import prm.project2.databinding.FragmentSignupBinding
 /**
  * A simple [Fragment] subclass as the second destination in the navigation.
  */
-class FragmentSignup : AbstractFragmentUserData() {
+class FragmentSignup : FragmentUserData() {
 
     private val userdataFormViewModel: UserdataFormViewModel by activityViewModels()
     private lateinit var binding: FragmentSignupBinding
@@ -65,7 +65,7 @@ class FragmentSignup : AbstractFragmentUserData() {
 
     private fun signup() {
         loadingSnackbar.show()
-        FirebaseCommon.firebaseAuth.createUserWithEmailAndPassword(email, password)
+        CommonFirebase.firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this::handleCreateUser)
     }
 

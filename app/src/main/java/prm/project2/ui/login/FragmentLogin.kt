@@ -12,14 +12,14 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.AuthResult
 import prm.project2.Common.toText
-import prm.project2.FirebaseCommon.firebaseAuth
-import prm.project2.FirebaseCommon.firebaseUser
-import prm.project2.FirebaseCommon.signInWithEmailAndPassword
+import prm.project2.CommonFirebase.firebaseAuth
+import prm.project2.CommonFirebase.firebaseUser
+import prm.project2.CommonFirebase.signInWithEmailAndPassword
 import prm.project2.R.string.*
 import prm.project2.databinding.FragmentLoginBinding
 import prm.project2.ui.main.MainActivity
 
-class FragmentLogin : AbstractFragmentUserData() {
+class FragmentLogin : FragmentUserData() {
 
     private val userdataFormViewModel: UserdataFormViewModel by activityViewModels()
     private lateinit var binding: FragmentLoginBinding

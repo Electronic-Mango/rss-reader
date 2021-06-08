@@ -8,6 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
+import prm.project2.Common.loadBitmap
 import prm.project2.R
 import prm.project2.R.id.favourite
 import prm.project2.R.id.share
@@ -39,15 +40,20 @@ class RssEntryDetailsActivity : CommonActivity() {
         supportActionBar?.setDisplayShowHomeEnabled(true)
 
         rssEntry = intent.toRssEntry()!!
+        loadAndDisplayEntryImage()
         binding.rssEntryDetailsContent.rssEntryDetailsTitle.text = rssEntry.title ?: ""
         binding.rssEntryDetailsContent.rssEntryDetailsDate.text = rssEntry.date?.format(DATE_FORMATTER) ?: ""
         binding.rssEntryDetailsContent.rssEntryDetailsDescription.text = rssEntry.description ?: ""
         binding.rssEntryDetailsContent.rssEntryDetailsLink.text = rssEntry.link ?: ""
-        thread {
-            val image = loadBitmap(rssEntry.getLargestImageUrl())
-            runOnUiThread { binding.rssEntryDetailsContent.rssEntryDetailsImage.setImageBitmap(image) }
-        }
         addToFirestore(rssEntry)
+    }
+
+    private fun loadAndDisplayEntryImage() {
+        thread {
+            loadBitmap(rssEntry.getLargestImageUrl()).let {
+                runOnUiThread { binding.rssEntryDetailsContent.rssEntryDetailsImage.setImageBitmap(it) }
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

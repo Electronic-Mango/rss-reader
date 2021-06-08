@@ -1,9 +1,6 @@
 package prm.project2.ui
 
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Log
 import android.view.View
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -11,15 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import prm.project2.Common
-import prm.project2.FirebaseCommon.firestoreData
+import prm.project2.CommonFirebase.firestoreData
 import prm.project2.R.string.*
 import prm.project2.rssentries.RssEntry
-import java.io.IOException
-import java.net.MalformedURLException
-import java.net.URL
 import kotlin.concurrent.thread
-
-private const val BITMAP_LOADING_TAG = "MAIN-ACTIVITY-LOADING-IMG"
 
 abstract class CommonActivity : AppCompatActivity() {
 
@@ -39,18 +31,6 @@ abstract class CommonActivity : AppCompatActivity() {
 
     protected fun registerForActivityResult(callback: (ActivityResult) -> Unit): ActivityResultLauncher<Intent> {
         return registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { callback(it) }
-    }
-
-    protected fun loadBitmap(url: String?): Bitmap? = url?.let {
-        try {
-            URL(url).openStream().let { BitmapFactory.decodeStream(it) }
-        } catch (exception: MalformedURLException) {
-            Log.e(BITMAP_LOADING_TAG, "Malformed URL $url!")
-            null
-        } catch (exception: IOException) {
-            Log.e(BITMAP_LOADING_TAG, "I/O Exception when loading an image from $url!")
-            null
-        }
     }
 
     protected fun addToFirestore(rssEntry: RssEntry) {

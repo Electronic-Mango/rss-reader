@@ -9,7 +9,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import prm.project2.Common.toText
 
-object FirebaseCommon {
+object CommonFirebase {
     val firebaseAuth: FirebaseAuth
         get() = FirebaseAuth.getInstance()
 

@@ -13,7 +13,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.GoogleAuthProvider
-import prm.project2.FirebaseCommon.firebaseAuth
+import prm.project2.CommonFirebase.firebaseAuth
 import prm.project2.R.id.move_to_login
 import prm.project2.R.id.move_to_signup
 import prm.project2.R.string.default_web_client_id

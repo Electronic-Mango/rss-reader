@@ -1,5 +1,6 @@
 package prm.project2.ui.main.rssentries
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Bitmap.createBitmap
 import android.view.LayoutInflater
@@ -8,12 +9,17 @@ import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import prm.project2.Common.loadBitmap
 import prm.project2.databinding.FragmentRssEntryBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.ui.main.rssentries.RssEntriesRecyclerViewAdapter.RssEntryViewHolder
+import kotlin.concurrent.thread
 
-class RssEntriesRecyclerViewAdapter(val viewModel: RssEntriesViewModel, lifecycleOwner: LifecycleOwner) :
-    Adapter<RssEntryViewHolder>() {
+class RssEntriesRecyclerViewAdapter(
+    private val viewModel: RssEntriesViewModel,
+    lifecycleOwner: LifecycleOwner,
+    private val activity: Activity?
+) : Adapter<RssEntryViewHolder>() {
 
     private val rssEntries: MutableList<RssEntry> = ArrayList()
 
@@ -45,13 +51,30 @@ class RssEntriesRecyclerViewAdapter(val viewModel: RssEntriesViewModel, lifecycl
         private val readTextColors = binding.textColorMarker.textColors.withAlpha(90)
 
         fun bind(rssEntry: RssEntry) {
+            setEntryImage(rssEntry)
             title.text = rssEntry.title
             shortDescription.text = rssEntry.description ?: ""
-            rssEntry.image?.square()?.let { image.setImageBitmap(it) }
             setTextColor(rssEntry.read)
             favouriteMark.visibility = if (rssEntry.favourite) View.VISIBLE else View.INVISIBLE
             rssEntryLayout.setOnClickListener { viewModel.showEntry(rssEntry) }
             rssEntryLayout.setOnLongClickListener { viewModel.toggleFavourite(rssEntry) }
+        }
+
+        private fun setEntryImage(rssEntry: RssEntry) {
+            if (rssEntry.image != null) {
+                image.setImageBitmap(rssEntry.image?.square())
+            } else {
+                loadEntryImage(rssEntry)
+            }
+        }
+
+        private fun loadEntryImage(rssEntry: RssEntry) {
+            thread {
+                loadBitmap(rssEntry.getSmallestImageUrl())?.let {
+                    rssEntry.image = it
+                    activity?.runOnUiThread { image.setImageBitmap(it.square()) }
+                }
+            }
         }
 
         private fun setTextColor(isRead: Boolean) {

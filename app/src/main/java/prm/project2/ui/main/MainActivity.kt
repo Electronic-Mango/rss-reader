@@ -30,9 +30,9 @@ import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.QuerySnapshot
 import prm.project2.Common.POLAND_COUNTRY_CODE
-import prm.project2.FirebaseCommon.firebaseAuth
-import prm.project2.FirebaseCommon.firebaseUsername
-import prm.project2.FirebaseCommon.firestoreData
+import prm.project2.CommonFirebase.firebaseAuth
+import prm.project2.CommonFirebase.firebaseUsername
+import prm.project2.CommonFirebase.firestoreData
 import prm.project2.R
 import prm.project2.R.id.account_logout
 import prm.project2.R.id.refresh
@@ -243,7 +243,6 @@ class MainActivity : CommonActivity() {
         val newEntries = parseRssStream(connection.inputStream).asSequence()
             .filter { it.guid.isNotBlank() }
             .filter { it.title.isNotBlankNorNull() }
-            .onEach { it.image = loadBitmap(it.getSmallestImageUrl()) }
             .onEach {
                 firebaseEntries.getEntry(it)?.let { firebaseEntry ->
                     it.read = firebaseEntry.read
@@ -254,7 +253,6 @@ class MainActivity : CommonActivity() {
             .toList()
         val favouriteFirebaseEntries = firebaseEntries.asSequence()
             .filter { it.favourite }
-            .onEach { it.image = loadBitmap(it.getSmallestImageUrl()) }
             .sortedByDescending { it.date }
             .toList()
         runOnUiThread {
