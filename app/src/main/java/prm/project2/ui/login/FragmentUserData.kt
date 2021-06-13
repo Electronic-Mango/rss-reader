@@ -6,18 +6,19 @@ import android.view.inputmethod.InputMethodManager
 import android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT
 import android.widget.EditText
 import android.widget.TextView.OnEditorActionListener
-import prm.project2.common.CommonFirebase
 import prm.project2.R.string.email_sending_error
 import prm.project2.R.string.verify_email_popup
 import prm.project2.ui.CommonFragment
+import prm.project2.utils.Firebase.firebaseAuth
+import prm.project2.utils.Firebase.firebaseUser
 
 abstract class FragmentUserData : CommonFragment() {
 
     protected fun sendEmailVerification(callback: () -> Unit = { }) {
-        CommonFirebase.firebaseUser?.sendEmailVerification()?.addOnCompleteListener {
+        firebaseUser?.sendEmailVerification()?.addOnCompleteListener {
             val messageId = if (it.isSuccessful) verify_email_popup else email_sending_error
             showSnackbar(messageId)
-            CommonFirebase.firebaseAuth.signOut()
+            firebaseAuth.signOut()
             callback()
         }
     }

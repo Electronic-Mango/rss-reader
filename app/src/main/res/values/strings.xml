@@ -12,8 +12,8 @@
     <string name="undo_favouriting">Cofnij</string>
     <string name="establishing_user_location">Określanie lokalizacji…</string>
     <string name="no_access_to_location_data">Brak dostępu do lokalizacji</string>
-    <string name="location_isnt_enabled">Lokalizacja nie jest włączona</string>
-    <string name="location_couldnt_be_established">Lokalizacja nie mogła być określona</string>
+    <string name="location_is_not_enabled">Lokalizacja nie jest włączona</string>
+    <string name="location_could_not_be_established">Lokalizacja nie mogła być określona</string>
     <string name="from_poland_label">z Polski</string>
     <string name="international_label">międzynarodowych</string>
     <string name="no_location_data">Brak danych lokalizacji</string>
@@ -58,4 +58,6 @@
     <string name="firestore_insert_error">Błąd przy dodawaniu wpisu do bazy danych!</string>
     <string name="repeat_operation">Ponów</string>
     <string name="firestore_remove_error">Błąd przy usuwaniu wpisu z bazy danych!</string>
+    <string name="notification_channel_name">Nowe artykuły</string>
+    <string name="notification_channel_description">Powiadomienia o nowych artykułach.</string>
 </resources>

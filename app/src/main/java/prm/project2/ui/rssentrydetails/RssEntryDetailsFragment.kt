@@ -1,15 +1,14 @@
 package prm.project2.ui.rssentrydetails
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import prm.project2.common.Common
 import prm.project2.databinding.FragmentRssEntryDetailsBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.ui.CommonFragment
+import prm.project2.utils.RemoteResourcesLoader.loadBitmap
 import java.time.format.DateTimeFormatter
 import kotlin.concurrent.thread
 
@@ -38,7 +37,7 @@ class RssEntryDetailsFragment : CommonFragment() {
 
     private fun loadAndDisplayEntryImage(rssEntry: RssEntry) {
         thread {
-            Common.loadBitmap(rssEntry.getLargestImageUrl()).let {
+            loadBitmap(rssEntry.getLargestImageUrl())?.let {
                 activity.runOnUiThread { binding.rssEntryDetailsImage.setImageBitmap(it) }
             }
         }

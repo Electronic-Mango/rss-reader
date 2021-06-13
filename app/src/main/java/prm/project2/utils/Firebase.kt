@@ -1,4 +1,4 @@
-package prm.project2.common
+package prm.project2.utils
 
 import android.widget.EditText
 import com.google.android.gms.tasks.Task
@@ -7,9 +7,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import prm.project2.common.Common.toText
+import prm.project2.utils.Common.toText
 
-object CommonFirebase {
+object Firebase {
     val firebaseAuth: FirebaseAuth
         get() = FirebaseAuth.getInstance()
 

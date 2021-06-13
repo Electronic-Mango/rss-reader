@@ -75,7 +75,7 @@ class RssEntry(
         )
     }
 
-    fun toIntent(packageContext: Context, cls: KClass<*>): Intent = Intent(packageContext, cls.java).apply {
+    fun toIntent(packageContext: Context, kClass: KClass<*>): Intent = Intent(packageContext, kClass.java).apply {
         putExtra(GUID, guid)
         putExtra(TITLE, title)
         putExtra(LINK, link)
@@ -114,17 +114,7 @@ fun DocumentSnapshot.toRssEntry(): RssEntry {
     )
 }
 
-private fun DocumentSnapshot.getLocalDateTime(field: String): LocalDateTime? = getString(field)?.toLocalDateTime()
-
-private fun String.toLocalDateTime(): LocalDateTime? = tryParse(this)
-
-private fun tryParse(text: String): LocalDateTime? {
-    return try {
-        LocalDateTime.parse(text)
-    } catch (_: DateTimeParseException) {
-        null
-    }
-}
+fun String.toLocalDateTime(): LocalDateTime? = tryParse(this)
 
 fun List<RssEntry>.getEntry(rssEntry: RssEntry): RssEntry? = getOrNull(indexOf(rssEntry))
 
@@ -137,4 +127,14 @@ fun Intent.toRssEntry(read: Boolean = true): RssEntry? {
     val favourite = getBooleanExtra(FAVOURITE, false)
     val enclosures = (getSerializableExtra(ENCLOSURES) as Array<*>).filterIsInstance<Enclosure>().toList()
     return RssEntry(guid, title, link, description, date, enclosures, favourite = favourite, read = read)
+}
+
+private fun DocumentSnapshot.getLocalDateTime(field: String): LocalDateTime? = getString(field)?.toLocalDateTime()
+
+private fun tryParse(text: String): LocalDateTime? {
+    return try {
+        LocalDateTime.parse(text)
+    } catch (_: DateTimeParseException) {
+        null
+    }
 }

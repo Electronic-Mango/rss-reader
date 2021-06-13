@@ -1,16 +1,7 @@
 package prm.project2
 
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.Manifest.permission.ACCESS_FINE_LOCATION
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.location.Geocoder
-import android.location.Location
-import android.location.LocationManager
-import android.location.LocationManager.GPS_PROVIDER
-import android.location.LocationManager.NETWORK_PROVIDER
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -21,48 +12,40 @@ import androidx.activity.viewModels
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.common.GooglePlayServicesUtil
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.security.ProviderInstaller
-import com.google.android.gms.tasks.CancellationToken
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.QuerySnapshot
-import prm.project2.common.Common.POLAND_COUNTRY_CODE
-import prm.project2.common.CommonFirebase.firebaseAuth
-import prm.project2.common.CommonFirebase.firebaseUsername
-import prm.project2.common.CommonFirebase.firestoreData
 import prm.project2.R.id.account_logout
 import prm.project2.R.id.refresh
 import prm.project2.R.string.*
 import prm.project2.databinding.ActivityMainBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.getEntry
-import prm.project2.rssentries.parseRssStream
 import prm.project2.rssentries.toRssEntry
 import prm.project2.ui.main.SectionsPagerAdapter
 import prm.project2.ui.main.rssentriesall.RssEntriesAllViewModel
 import prm.project2.ui.main.rssentriesfavourites.RssEntriesFavouritesViewModel
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.*
+import prm.project2.utils.Common.POLAND_COUNTRY_CODE
+import prm.project2.utils.CountryGeoLocator
+import prm.project2.utils.Firebase.firebaseAuth
+import prm.project2.utils.Firebase.firebaseUsername
+import prm.project2.utils.Firebase.firestoreData
+import prm.project2.utils.RemoteResourcesLoader.tryToLoadAndParseRssData
 import kotlin.concurrent.thread
 
 private const val RSS_LINK_POLAND = "https://www.polsatnews.pl/rss/polska.xml"
 private const val RSS_LINK_INTERNATIONAL = "https://www.polsatnews.pl/rss/swiat.xml"
-private const val LOCATION_REQUEST_ID = 100
+const val LOCATION_REQUEST_ID = 100
 
 private const val GOOGLE_PLAY_TAG = "MAIN-ACTIVITY-GP-SECURITY"
-private const val LOADING_RSS_DATA_TAG = "MAIN-ACTIVITY-LOADING-RSS-DATA"
 
 class MainActivity : CommonActivity() {
 
     private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()
     private val rssEntriesFavouritesViewModel: RssEntriesFavouritesViewModel by viewModels()
-    private lateinit var locationClient: FusedLocationProviderClient
-    private lateinit var locationCancellationToken: CancellationToken
     private lateinit var binding: ActivityMainBinding
+    private lateinit var countryGeoLocator: CountryGeoLocator
     private lateinit var showRssEntryDetailsActivityResult: ActivityResultLauncher<Intent>
     override val snackbarView: View
         get() = binding.viewPager
@@ -74,11 +57,15 @@ class MainActivity : CommonActivity() {
         setSupportActionBar(binding.toolbarMainActivity)
         setContentView(binding.root)
 
-        locationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCancellationToken = CancellationTokenSource().token
-
         setupViewPager()
         installSecurityProvider()
+        countryGeoLocator = CountryGeoLocator(
+            activity = this,
+            locationEstablishedCallback = this::loadRssDataWithCorrectCountryCode,
+            locationNotEstablishedCallback = { loadRssDataWithoutLocationData() },
+            locationNotEnabledCallback = { loadRssDataWithoutLocationData(getString(location_is_not_enabled)) },
+            locationNotPermittedCallback = { loadRssDataWithoutLocationData(getString(no_access_to_location_data)) }
+        )
         checkLocationPermissionAndCurrentLocation()
 
         rssEntriesAllViewModel.entryToDisplay.observe(this, { launchFullRssEntryDetailsActivity(it) })
@@ -125,85 +112,31 @@ class MainActivity : CommonActivity() {
 
     private fun checkLocationPermissionAndCurrentLocation() {
         showIndefiniteSnackbar(establishing_user_location)
-        if (!checkPermissionsGranted(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)) {
-            requestPermissions(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION), LOCATION_REQUEST_ID)
-        } else {
-            checkCurrentLocationAndLoadRssData()
-        }
-    }
-
-    private fun checkPermissionsGranted(vararg permissions: String): Boolean {
-        return permissions.map { checkSelfPermission(it) == PERMISSION_GRANTED }.all { it }
+        countryGeoLocator.runCallbackForCurrentCountryCodeOrRequestPermissions()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
-            LOCATION_REQUEST_ID -> handleLocationPermissionsRequestResult(permissions, grantResults)
+            LOCATION_REQUEST_ID -> countryGeoLocator.handleLocationPermissionsRequestResult(permissions, grantResults)
             else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
     }
 
-    private fun handleLocationPermissionsRequestResult(permissions: Array<out String>, grantResults: IntArray) {
-        if (checkLocationPermissionsRequestResults(permissions, grantResults)) {
-            checkCurrentLocationAndLoadRssData()
-        } else {
-            loadRssDataWithoutLocationData(getString(no_access_to_location_data))
-        }
-    }
-
-    private fun checkLocationPermissionsRequestResults(
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ): Boolean {
-        return permissions.contains(ACCESS_COARSE_LOCATION)
-                && permissions.contains(ACCESS_FINE_LOCATION)
-                && grantResults[permissions.indexOf(ACCESS_COARSE_LOCATION)] == PERMISSION_GRANTED
-                && grantResults[permissions.indexOf(ACCESS_FINE_LOCATION)] == PERMISSION_GRANTED
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun checkCurrentLocationAndLoadRssData() {
-        if (isLocationEnabled()) {
-            requestNewLocationData()
-        } else {
-            loadRssDataWithoutLocationData(getString(location_isnt_enabled))
-        }
-    }
-
-    private fun isLocationEnabled(): Boolean {
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(GPS_PROVIDER) || locationManager.isProviderEnabled(NETWORK_PROVIDER)
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun requestNewLocationData() {
-        locationClient.getCurrentLocation(PRIORITY_HIGH_ACCURACY, locationCancellationToken)
-            .addOnCompleteListener { locationTask ->
-                locationTask.result?.let { loadRssDataWithCorrectSource(it) } ?: loadRssDataWithoutLocationData()
-            }
-    }
-
-    private fun loadRssDataWithCorrectSource(location: Location) {
-        val countryCode = getCountryCodeFromLocation(location)
+    private fun loadRssDataWithCorrectCountryCode(countryCode: String?) {
         if (countryCode == null) {
-            loadRssDataWithoutLocationData(getString(location_couldnt_be_established))
+            loadRssDataWithoutLocationData(getString(location_could_not_be_established))
         } else {
             val rssLink = if (countryCode == POLAND_COUNTRY_CODE) RSS_LINK_POLAND else RSS_LINK_INTERNATIONAL
             val loadingMessage = if (rssLink == RSS_LINK_POLAND) from_poland_label else international_label
-            loadRssData(rssLink, getString(loading_news_label, getString(loadingMessage)))
+            loadNewAndFavouritedRssData(rssLink, getString(loading_news_label, getString(loadingMessage)))
         }
     }
 
-    private fun getCountryCodeFromLocation(location: Location): String? {
-        return Geocoder(this, Locale.getDefault()).getFromLocation(location.latitude, location.longitude, 1)
-            .firstOrNull()?.countryCode
-    }
-
     private fun loadRssDataWithoutLocationData(message: String = getString(no_location_data)) {
-        loadRssData(RSS_LINK_INTERNATIONAL, getString(loading_international_news_tail_label, message))
+        loadNewAndFavouritedRssData(RSS_LINK_INTERNATIONAL, getString(loading_international_news_tail_label, message))
     }
 
-    private fun loadRssData(rssLink: String, message: String) {
+    private fun loadNewAndFavouritedRssData(rssLink: String, message: String) {
         val loadingDataSnackbar = showIndefiniteSnackbar(message)
         thread {
             firestoreData.get()
@@ -219,49 +152,47 @@ class MainActivity : CommonActivity() {
         loadingDataMessage: String
     ) {
         thread {
-            try {
-                loadAndHandleRssDataThread(query, rssLink, loadingDataSnackbar)
-            } catch (e: Exception) {
-                Log.e(LOADING_RSS_DATA_TAG, "Exception encountered when loading RSS: ${e.stackTraceToString()}.")
-                firestoreDataRetrieveFailure(rssLink, loadingDataMessage)
-            }
+            tryToLoadAndParseRssData(
+                rssLink,
+                { rssEntries -> loadAndHandleRssDataThread(query, rssEntries, loadingDataSnackbar, rssLink) },
+                { firestoreDataRetrieveFailure(rssLink, loadingDataMessage) })
         }
     }
 
     private fun firestoreDataRetrieveFailure(rssLink: String, message: String) {
         showSnackbar(loading_rss_data_error).setAction(getString(repeat_operation)) {
-            loadRssData(rssLink, message)
+            loadNewAndFavouritedRssData(rssLink, message)
         }
     }
 
-    private fun loadAndHandleRssDataThread(query: QuerySnapshot, rssLink: String, loadingDataSnackbar: Snackbar) {
-        val firebaseEntries = query.documents.map { snapshot -> snapshot.toRssEntry() }
-        val connection = URL(rssLink).openConnection() as HttpURLConnection
-        val newEntries = parseRssStream(connection.inputStream).asSequence()
-            .filter { it.guid.isNotBlank() }
-            .filter { it.title.isNotBlankNorNull() }
-            .onEach {
-                firebaseEntries.getEntry(it)?.let { firebaseEntry ->
-                    it.read = firebaseEntry.read
-                    it.favourite = firebaseEntry.favourite
-                }
+    private fun loadAndHandleRssDataThread(
+        query: QuerySnapshot,
+        newRssData: List<RssEntry>,
+        loadingDataSnackbar: Snackbar,
+        rssLink: String
+    ) {
+        val firebaseEntries = query.documents.map(DocumentSnapshot::toRssEntry).sortedByDescending(RssEntry::date)
+        val newEntries = newRssData.onEach { newRssEntry ->
+            firebaseEntries.getEntry(newRssEntry)?.let { firebaseEntry ->
+                newRssEntry.read = firebaseEntry.read
+                newRssEntry.favourite = firebaseEntry.favourite
             }
-            .sortedByDescending { it.date }
-            .toList()
-        val favouriteFirebaseEntries = firebaseEntries.asSequence()
-            .filter { it.favourite }
-            .sortedByDescending { it.date }
-            .toList()
+        }
+        val favouriteFirebaseEntries = firebaseEntries.asSequence().filter(RssEntry::favourite).toList()
         runOnUiThread {
-            rssEntriesAllViewModel.setEntries(newEntries)
-            rssEntriesFavouritesViewModel.setEntries(favouriteFirebaseEntries)
-            (binding.viewPager.adapter as SectionsPagerAdapter).apply {
-                allRssEntries.binding.rssEntriesRecyclerView.smoothScrollToPosition(0)
-                favouriteRssEntries.binding.rssEntriesRecyclerView.smoothScrollToPosition(0)
-            }
+            updateEntries(newEntries, favouriteFirebaseEntries)
             loadingDataSnackbar.dismiss()
         }
+        newEntries.firstOrNull()?.let { setupWorker(this, it, rssLink) }
+    }
 
+    private fun updateEntries(newEntries: List<RssEntry>, favouriteFirebaseEntries: List<RssEntry>) {
+        rssEntriesAllViewModel.setEntries(newEntries)
+        rssEntriesFavouritesViewModel.setEntries(favouriteFirebaseEntries)
+        (binding.viewPager.adapter as SectionsPagerAdapter).apply {
+            allRssEntries.binding.rssEntriesRecyclerView.smoothScrollToPosition(0)
+            favouriteRssEntries.binding.rssEntriesRecyclerView.smoothScrollToPosition(0)
+        }
     }
 
     private fun launchFullRssEntryDetailsActivity(rssEntry: RssEntry) {
@@ -277,9 +208,7 @@ class MainActivity : CommonActivity() {
             .setPositiveButton(getString(yes_label)) { _, _ ->
                 toggleFavourite(rssEntry)
                 val snackMessage = if (newFavouriteValue) entry_added_to_favourites else entry_removed_from_favourites
-                showSnackbar(snackMessage).setAction(getString(undo_favouriting)) {
-                    toggleFavourite(rssEntry)
-                }
+                showSnackbar(snackMessage).setAction(getString(undo_favouriting)) { toggleFavourite(rssEntry) }
             }
             .setNegativeButton(getString(no_label)) { dialog, _ -> dialog.dismiss() }
             .create()
@@ -315,6 +244,8 @@ class MainActivity : CommonActivity() {
             .setMessage(getString(logout_message, firebaseUsername!!))
             .setCancelable(true)
             .setPositiveButton(getString(yes_label)) { _, _ ->
+                cancelWorker(this)
+                notificationManager.cancelAll()
                 firebaseAuth.signOut()
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
@@ -324,5 +255,3 @@ class MainActivity : CommonActivity() {
             .show()
     }
 }
-
-private fun String?.isNotBlankNorNull(): Boolean = this?.isNotBlank() ?: false

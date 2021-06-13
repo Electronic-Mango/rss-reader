@@ -1,7 +1,6 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    id "kotlin-kapt"
     id "com.google.gms.google-services"
 }
 
@@ -15,14 +14,7 @@ android {
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-        kapt {
-            arguments {
-                arg("room.schemaLocation", "$projectDir/schemas")
-            }
-        }
     }
 
     buildTypes {
@@ -59,14 +51,16 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:2.3.5"
     implementation "com.google.android.gms:play-services-location:18.0.0"
     implementation "com.google.android.gms:play-services-auth:19.0.0"
-    implementation "androidx.room:room-runtime:2.3.0"
-    implementation "androidx.room:room-ktx:2.3.0"
     implementation "com.google.firebase:firebase-auth:21.0.1"
     implementation "com.google.firebase:firebase-auth-ktx"
     implementation "com.google.firebase:firebase-firestore-ktx"
-    implementation "androidx.annotation:annotation:1.2.0"
-    kapt "androidx.room:room-compiler:2.3.0"
+    implementation "androidx.work:work-runtime:2.6.0-beta01"
+    implementation "androidx.work:work-runtime-ktx:2.6.0-beta01"
+    implementation "androidx.work:work-rxjava2:2.6.0-beta01"
+    implementation "androidx.work:work-gcm:2.6.0-beta01"
+    implementation "androidx.work:work-multiprocess:2.6.0-beta01"
     testImplementation "junit:junit:4.13.2"
     androidTestImplementation "androidx.test.ext:junit:1.1.2"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.3.0"
+    androidTestImplementation "androidx.work:work-testing:2.6.0-beta01"
 }

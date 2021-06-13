@@ -9,10 +9,10 @@ import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import prm.project2.common.Common.loadBitmap
 import prm.project2.databinding.FragmentRssEntryBinding
 import prm.project2.rssentries.RssEntry
 import prm.project2.ui.main.RssEntriesRecyclerViewAdapter.RssEntryViewHolder
+import prm.project2.utils.RemoteResourcesLoader.loadBitmap
 import kotlin.concurrent.thread
 
 class RssEntriesRecyclerViewAdapter(

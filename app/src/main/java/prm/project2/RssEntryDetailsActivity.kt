@@ -21,6 +21,8 @@ import prm.project2.rssentries.GUID
 import prm.project2.rssentries.RssEntry
 import prm.project2.rssentries.toRssEntry
 import prm.project2.ui.rssentrydetails.RssEntryDetailsViewModel
+import prm.project2.utils.Common.INTENT_FROM_NOTIFICATION
+
 
 class RssEntryDetailsActivity : CommonActivity() {
 
@@ -35,8 +37,8 @@ class RssEntryDetailsActivity : CommonActivity() {
         binding = ActivityRssEntryDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
+        supportActionBar?.setDisplayHomeAsUpEnabled(!intent.getBooleanExtra(INTENT_FROM_NOTIFICATION, false))
+        supportActionBar?.setDisplayShowHomeEnabled(!intent.getBooleanExtra(INTENT_FROM_NOTIFICATION, false))
         rssEntry = intent.toRssEntry()!!
         addToFirestore(rssEntry)
     }
