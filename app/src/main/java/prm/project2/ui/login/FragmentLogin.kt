@@ -115,7 +115,6 @@ class FragmentLogin : FragmentUserData() {
                 showSnackbar(password_reset_email_sent)
             } else {
                 showSnackbar(email_sending_error)
-                    .setAction(getString(resent_password_reset_email_action)) { resetPassword() }
             }
         }
     }

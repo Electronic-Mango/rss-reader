@@ -47,14 +47,13 @@
 
     <string name="google_login_failed">Błąd logowania przez Google, sprawdź połączenie z internetem.</string>
     <string name="invalid_email">Niepoprawny adres email</string>
-    <string name="invalid_password">Podaj hasło</string>
+    <string name="invalid_password">Hasło powinno mieć co najmniej 6 znaków</string>
     <string name="login_failed">Błąd logowania, zły adres email, hasło lub brak połączenia z internetem.</string>
     <string name="signup_failed">Błąd rejestracji, możliwe, że podany użytkownik już istnieje lub nie ma połączenia z internetem.</string>
     <string name="email_not_verified">Adres email nie został jeszcze zweryfikowany.</string>
     <string name="resend_verification_email_action">Wyślij ponownie</string>
     <string name="reset_password">Resetuj hasło</string>
-    <string name="email_sending_error">"Błąd wysyłania wiadomości email, spróbuj ponownie później."</string>
-    <string name="resent_password_reset_email_action">Powtórz</string>
+    <string name="email_sending_error">"Błąd wysyłania wiadomości email, sprawdź adres lub spróbuj ponownie później."</string>
     <string name="firestore_insert_error">Błąd przy dodawaniu wpisu do bazy danych!</string>
     <string name="repeat_operation">Ponów</string>
     <string name="firestore_remove_error">Błąd przy usuwaniu wpisu z bazy danych!</string>

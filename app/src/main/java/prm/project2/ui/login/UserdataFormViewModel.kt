@@ -29,11 +29,7 @@ class UserdataFormViewModel : ViewModel() {
         _userdataForm.value = UserdataFormState()
     }
 
-    private fun isEmailValid(email: String): Boolean {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
+    private fun isEmailValid(email: String): Boolean = Patterns.EMAIL_ADDRESS.matcher(email).matches()
 
-    private fun isPasswordValid(password: String): Boolean {
-        return password.isNotEmpty()
-    }
+    private fun isPasswordValid(password: String): Boolean = password.length >= 6
 }
