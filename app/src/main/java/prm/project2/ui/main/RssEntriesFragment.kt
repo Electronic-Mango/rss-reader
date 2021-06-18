@@ -8,6 +8,9 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import prm.project2.databinding.FragmentRssEntriesBinding
 
+/**
+ * Common abstract parent of [androidx.fragment.app.Fragment] used by [prm.project2.MainActivity].
+ */
 abstract class RssEntriesFragment : Fragment() {
 
     protected abstract val viewModel: RssEntriesViewModel

@@ -19,7 +19,7 @@ import prm.project2.utils.Firebase.createUserWithEmailAndPassword
 import prm.project2.utils.Firebase.firebaseAuth
 
 /**
- * A simple [Fragment] subclass as the second destination in the navigation.
+ * [androidx.fragment.app.Fragment] allowing creating new account via email and password.
  */
 class FragmentSignup : FragmentUserData() {
 

@@ -14,6 +14,9 @@ import kotlin.concurrent.thread
 
 private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss")
 
+/**
+ * [androidx.fragment.app.Fragment] displaying details of RSS entry in [prm.project2.RssEntryDetailsActivity] activity.
+ */
 class RssEntryDetailsFragment : CommonFragment() {
 
     private val rssEntryDetailsViewModel: RssEntryDetailsViewModel by activityViewModels()

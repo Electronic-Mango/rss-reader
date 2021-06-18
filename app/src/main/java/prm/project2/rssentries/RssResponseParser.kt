@@ -11,6 +11,9 @@ import java.time.format.DateTimeFormatter
 private val NAMESPACE: String? = null
 private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
 
+/**
+ * Function parsing [InputStream] received from RSS channel to a list of [RssEntry].
+ */
 @Throws(XmlPullParserException::class, IOException::class)
 fun parseRssStream(inputStream: InputStream): List<RssEntry> {
     inputStream.use {

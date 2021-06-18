@@ -13,6 +13,9 @@ import com.google.android.material.snackbar.Snackbar
 import prm.project2.R.string.info_loading_user_data
 import prm.project2.utils.Common
 
+/**
+ * Common abstract class for [androidx.fragment.app.Fragment] used in this app.
+ */
 abstract class CommonFragment : Fragment() {
 
     protected val activity: Activity

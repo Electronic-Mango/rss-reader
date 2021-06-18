@@ -21,6 +21,9 @@ const val TYPE = "TYPE"
 const val FAVOURITE = "FAVOURITE"
 const val READ = "READ"
 
+/**
+ * Data class storing information about enclosures (images data) for [prm.project2.rssentries.RssEntry].
+ */
 data class Enclosure(
     val url: String,
     val length: Long?,
@@ -29,6 +32,9 @@ data class Enclosure(
     fun firestoreEntity(): HashMap<String, Any?> = hashMapOf(URL to url, LENGTH to length, TYPE to type)
 }
 
+/**
+ * Class storing information about a single RSS entry.
+ */
 class RssEntry(
     val guid: String,
     val title: String?,

@@ -22,6 +22,11 @@ import prm.project2.databinding.FragmentLoginOrSignupBinding
 import prm.project2.ui.CommonFragment
 import prm.project2.utils.Firebase.firebaseAuth
 
+/**
+ * Initial fragment for [prm.project2.LoginActivity].
+ * Allows navigating to login and signup fragments using [androidx.navigation.NavController].
+ * Allows for login via Google account.
+ */
 class FragmentLoginOrSignup : CommonFragment() {
 
     private lateinit var binding: FragmentLoginOrSignupBinding

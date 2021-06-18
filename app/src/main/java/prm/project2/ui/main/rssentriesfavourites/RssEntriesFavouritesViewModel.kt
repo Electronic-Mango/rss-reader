@@ -6,6 +6,11 @@ import prm.project2.rssentries.GUID
 import prm.project2.rssentries.RssEntry
 import prm.project2.ui.main.RssEntriesViewModel
 
+/**
+ * [androidx.lifecycle.ViewModel] storing user's favourited RSS entries.
+ * Makes sure that only favourited entries are displayed.
+ * Entries which were unfavourited are removed from this [androidx.fragment.app.Fragment].
+ */
 class RssEntriesFavouritesViewModel : RssEntriesViewModel() {
 
     fun addEntry(rssEntry: RssEntry) {

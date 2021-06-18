@@ -9,6 +9,10 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import prm.project2.utils.Common.toText
 
+/**
+ * Helper object with properties and methods connected with <a href="https://firebase.google.com/">Firebase</a>
+ * used throughout the app.
+ */
 object Firebase {
     val firebaseAuth: FirebaseAuth
         get() = FirebaseAuth.getInstance()

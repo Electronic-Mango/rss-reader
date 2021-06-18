@@ -18,6 +18,9 @@ import prm.project2.databinding.ActivityLoginBinding
 import prm.project2.utils.Common.NOTIFICATION_CHANNEL_ID
 import prm.project2.utils.Firebase.firebaseUser
 
+/**
+ * Activity allowing users to login or signup.
+ */
 class LoginActivity : CommonActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration

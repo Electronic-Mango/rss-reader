@@ -20,6 +20,9 @@ import java.util.*
 
 private const val LOG_TAG = "GEOLOCATION"
 
+/**
+ * Helper class handling establishing current user location or requesting permissions.
+ */
 class CountryGeoLocator(
     private val activity: Activity,
     private val locationEstablishedCallback: (countryCode: String?) -> Unit,

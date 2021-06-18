@@ -12,6 +12,10 @@ import prm.project2.ui.CommonFragment
 import prm.project2.utils.Firebase.firebaseAuth
 import prm.project2.utils.Firebase.firebaseUser
 
+/**
+ * Common [androidx.fragment.app.Fragment] for fragments with email and password inputs -
+ * [FragmentLogin] and [FragmentSignup].
+ */
 abstract class FragmentUserData : CommonFragment() {
 
     protected fun sendEmailVerification(callback: () -> Unit = { }) {

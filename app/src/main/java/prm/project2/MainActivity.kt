@@ -40,6 +40,10 @@ const val LOCATION_REQUEST_ID = 100
 
 private const val GOOGLE_PLAY_TAG = "MAIN-ACTIVITY-GP-SECURITY"
 
+/**
+ * Main activity displaying a list of new loaded RSS entries and a list of favourite RSS entries.
+ * Allows to display details about RSS entry via different activity - [RssEntryDetailsActivity].
+ */
 class MainActivity : CommonActivity() {
 
     private val rssEntriesAllViewModel: RssEntriesAllViewModel by viewModels()

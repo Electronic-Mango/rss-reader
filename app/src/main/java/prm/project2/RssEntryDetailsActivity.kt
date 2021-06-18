@@ -23,7 +23,9 @@ import prm.project2.rssentries.toRssEntry
 import prm.project2.ui.rssentrydetails.RssEntryDetailsViewModel
 import prm.project2.utils.Common.INTENT_FROM_NOTIFICATION
 
-
+/**
+ * Activity displaying details for a single RSS entry.
+ */
 class RssEntryDetailsActivity : CommonActivity() {
 
     private val rssEntryDetailsViewModel: RssEntryDetailsViewModel by viewModels()

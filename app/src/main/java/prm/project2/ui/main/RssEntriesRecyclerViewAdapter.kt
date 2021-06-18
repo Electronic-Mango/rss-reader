@@ -15,6 +15,9 @@ import prm.project2.ui.main.RssEntriesRecyclerViewAdapter.RssEntryViewHolder
 import prm.project2.utils.RemoteResourcesLoader.loadBitmap
 import kotlin.concurrent.thread
 
+/**
+ * [Adapter] [androidx.recyclerview.widget.RecyclerView] storing RSS entries.
+ */
 class RssEntriesRecyclerViewAdapter(
     private val viewModel: RssEntriesViewModel,
     lifecycleOwner: LifecycleOwner,

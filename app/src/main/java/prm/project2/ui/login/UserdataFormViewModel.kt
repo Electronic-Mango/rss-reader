@@ -9,6 +9,10 @@ import prm.project2.R.string.invalid_email
 import prm.project2.R.string.invalid_password
 import prm.project2.utils.Common.toText
 
+/**
+ * [ViewModel] storing infromation about entered email and password during login or signup.
+ * Notifies relevant fragments whether entered data is structurally correct.
+ */
 class UserdataFormViewModel : ViewModel() {
 
     private val _userdataForm = MutableLiveData<UserdataFormState>()

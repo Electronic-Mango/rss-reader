@@ -12,6 +12,9 @@ private val CANNOT_DISMISS_SNACKBAR_BEHAVIOR = object : Behavior() {
     override fun canSwipeDismissView(child: View): Boolean = false
 }
 
+/**
+ * Object with common helper functions and constants used throughout the app.
+ */
 object Common {
 
     const val SHARED_PREFERENCES_LOCATION = "shared-preferences"

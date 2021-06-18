@@ -14,6 +14,9 @@ import prm.project2.utils.Common
 import prm.project2.utils.Firebase.firestoreData
 import kotlin.concurrent.thread
 
+/**
+ * Common abstract class for Activities used throughout the app.
+ */
 abstract class CommonActivity : AppCompatActivity() {
 
     abstract val snackbarView: View

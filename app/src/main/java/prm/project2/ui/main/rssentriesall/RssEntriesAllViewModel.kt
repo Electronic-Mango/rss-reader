@@ -6,6 +6,9 @@ import prm.project2.rssentries.GUID
 import prm.project2.rssentries.RssEntry
 import prm.project2.ui.main.RssEntriesViewModel
 
+/**
+ * [androidx.lifecycle.ViewModel] storing loaded new RSS entries data.
+ */
 class RssEntriesAllViewModel : RssEntriesViewModel() {
 
     fun updateEntryFromIntent(intent: Intent?): RssEntry? {

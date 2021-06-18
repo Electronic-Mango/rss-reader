@@ -15,6 +15,9 @@ import java.net.UnknownServiceException
 private const val LOADING_RSS_DATA_TAG = "MAIN-ACTIVITY-LOADING-RSS-DATA"
 private const val BITMAP_LOADING_TAG = "MAIN-ACTIVITY-LOADING-IMG"
 
+/**
+ * Object responsible for loading remote (network) resources via their URLs.
+ */
 object RemoteResourcesLoader {
 
     fun tryToLoadAndParseRssData(

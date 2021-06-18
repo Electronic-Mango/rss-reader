@@ -5,6 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import prm.project2.rssentries.RssEntry
 
+/**
+ * [ViewModel] storing data about RSS entries.
+ * Used as common parent for [ViewModel] storing new loaded entries, or favourite ones.
+ */
 abstract class RssEntriesViewModel : ViewModel() {
 
     private val mutableEntries = MutableLiveData<List<RssEntry>>().apply { value = ArrayList() }

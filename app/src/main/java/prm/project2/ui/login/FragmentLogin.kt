@@ -19,6 +19,9 @@ import prm.project2.utils.Firebase.firebaseAuth
 import prm.project2.utils.Firebase.firebaseUser
 import prm.project2.utils.Firebase.signInWithEmailAndPassword
 
+/**
+ * [androidx.fragment.app.Fragment] allowing login users via email and password.
+ */
 class FragmentLogin : FragmentUserData() {
 
     private val userdataFormViewModel: UserdataFormViewModel by activityViewModels()

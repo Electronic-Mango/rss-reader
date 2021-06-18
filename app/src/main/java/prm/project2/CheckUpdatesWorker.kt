@@ -29,6 +29,9 @@ private const val WORK_NAME = "WORK_CHECK_UPDATES"
 private const val INTERVAL_MS = PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS
 private const val FLEX_MS = PeriodicWorkRequest.MIN_PERIODIC_FLEX_MILLIS
 
+/**
+ * Helper method adding new [CheckUpdatesWorker] for [PeriodicWorkRequest] and adding it to queue via [WorkManager].
+ */
 fun setupWorker(context: Context, latestRssEntry: RssEntry, rssLink: String) {
     context.getSharedPreferences(SHARED_PREFERENCES_LOCATION, MODE_PRIVATE).edit()
         .putString(LATEST_LOADED_RSS_ENTRY, latestRssEntry.date?.toString())
@@ -41,10 +44,16 @@ fun setupWorker(context: Context, latestRssEntry: RssEntry, rssLink: String) {
         }
 }
 
+/**
+ * Helper method deleting [CheckUpdatesWorker] from [WorkManager].
+ */
 fun cancelWorker(context: Context) {
     WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
 }
 
+/**
+ * [Worker] looking for new RSS entries and showing notifications for updates.
+ */
 class CheckUpdatesWorker(private val context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
 
     private val sharedPreferences by lazy { context.getSharedPreferences(SHARED_PREFERENCES_LOCATION, MODE_PRIVATE) }

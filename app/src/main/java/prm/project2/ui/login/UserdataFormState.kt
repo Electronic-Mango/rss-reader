@@ -1,7 +1,7 @@
 package prm.project2.ui.login
 
 /**
- * Data validation state of the login form.
+ * Data class storing entered email and password data during login or signup.
  */
 data class UserdataFormState(
     val isEmailValid: Boolean = false,

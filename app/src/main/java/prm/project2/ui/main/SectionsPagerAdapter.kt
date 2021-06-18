@@ -9,6 +9,10 @@ import prm.project2.R.string.tab_title_favourites
 import prm.project2.ui.main.rssentriesall.RssEntriesAllFragment
 import prm.project2.ui.main.rssentriesfavourites.RssEntriesFavouritesFragment
 
+/**
+ * [androidx.fragment.app.FragmentStatePagerAdapter] handling tabs for new loaded RSS entries
+ * [androidx.fragment.app.Fragment] and favourite entries [androidx.fragment.app.Fragment].
+ */
 class SectionsPagerAdapter(private val context: Context, fragmentManager: FragmentManager) :
     FragmentStatePagerAdapter(fragmentManager) {
 
