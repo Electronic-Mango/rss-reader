@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/fragmentLoginOrSignup"
-        android:name="prm.project2.ui.login.FragmentLoginOrSignup"
+        android:name="com.lazureleming.rssreader.ui.login.FragmentLoginOrSignup"
         android:label="@string/title_activity_login"
         tools:layout="@layout/fragment_login_or_signup">
         <action
@@ -19,7 +19,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragmentLogin"
-        android:name="prm.project2.ui.login.FragmentLogin"
+        android:name="com.lazureleming.rssreader.ui.login.FragmentLogin"
         android:label="@string/action_sign_in_via_email"
         tools:layout="@layout/fragment_login">
         <action
@@ -28,7 +28,7 @@
     </fragment>
     <fragment
         android:id="@+id/fragmentSignup"
-        android:name="prm.project2.ui.login.FragmentSignup"
+        android:name="com.lazureleming.rssreader.ui.login.FragmentSignup"
         android:label="@string/action_sign_up"
         tools:layout="@layout/fragment_signup">
         <action
